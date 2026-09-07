@@ -188,6 +188,58 @@
     .part-pill{display:inline-block;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 8px;font-size:.78rem}
     .part-source-img{font-size:.72rem;color:var(--muted);text-align:center;margin-top:7px}
     @media(max-width:620px){.part-layout{grid-template-columns:1fr}.part-image{min-height:120px}.part-image img{max-height:190px}}
+
+    /* v6.0 navigation refresh */
+    .home-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:700;white-space:nowrap}
+    .hero.compact-hero{padding:16px 18px}
+    .hero.compact-hero h2{font-size:1.18rem}
+    .hero.compact-hero p{font-size:.9rem}
+    .scope-filters{display:flex;gap:7px;overflow-x:auto;margin-top:11px;padding-bottom:2px;scrollbar-width:none}
+    .scope-filters::-webkit-scrollbar{display:none}
+    .scope-filter{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 11px;cursor:pointer;white-space:nowrap;font-size:.82rem;font-weight:650}
+    .scope-filter.active{background:var(--brand);border-color:var(--brand);color:#fff}
+    .source-note.compact-source{font-size:.8rem;padding:9px 11px;margin-top:11px}
+    .home-content[hidden],.results-section[hidden]{display:none!important}
+    .home-nav-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .home-nav-grid.reference-nav{grid-template-columns:repeat(3,1fr)}
+    .home-nav-card{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:16px;padding:15px;text-align:left;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.035);min-height:82px}
+    .home-nav-card:hover{border-color:var(--brand)}
+    .home-nav-card strong{display:block;font-size:.98rem}
+    .home-nav-card small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}
+    .home-nav-card.primary-nav{border-left:4px solid var(--brand)}
+    .results-header{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:20px 2px 10px}
+    .results-header h2{font-size:1.08rem;margin:0}
+    .results-header span{font-size:.82rem;color:var(--muted)}
+    .result-group{margin:0 0 18px}
+    .result-group-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 2px 8px;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+    .result-group-title span:last-child{font-weight:650;letter-spacing:0;text-transform:none}
+    .result-group-list{display:grid;gap:9px}
+    details.card summary{padding:13px 14px}
+    details.card .summary-text h3{font-size:.96rem;line-height:1.3}
+    details.card .meta{font-size:.74rem;margin-top:3px}
+    .part-summary-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:850;color:var(--brand)}
+    .part-summary-name{font-weight:650}
+    .note-search-card{border:1px solid var(--line);background:var(--panel);border-radius:15px;padding:13px 14px;box-shadow:0 3px 12px rgba(0,0,0,.035)}
+    .note-search-card strong{display:block;font-size:.94rem}
+    .note-search-card p{margin:6px 0 0;color:var(--text);font-size:.86rem;white-space:pre-wrap}
+    .note-search-card small{display:block;color:var(--muted);font-size:.75rem;margin-top:6px}
+    .note-search-card button{margin-top:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:6px 9px;cursor:pointer;font-size:.8rem}
+    .quick-grid{grid-template-columns:repeat(3,1fr)}
+    .quick.task{min-height:72px}
+    #legacyQuickGrid,#notesPanel{display:none!important}
+    @media(max-width:760px){
+      .home-nav-grid.reference-nav{grid-template-columns:1fr 1fr}
+      .quick-grid{grid-template-columns:1fr 1fr}
+      .top-actions{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
+      .home-btn,.info-btn,.theme-btn{flex:0 0 auto}
+    }
+    @media(max-width:430px){
+      .home-nav-grid,.home-nav-grid.reference-nav{grid-template-columns:1fr 1fr}
+      .home-nav-card{padding:12px;min-height:78px}
+      .home-nav-card small{font-size:.76rem}
+      .scope-filter{padding:7px 10px}
+      .results-header{align-items:flex-start;flex-direction:column;gap:2px}
+    }
   </style>
 </head>
 <body>
@@ -196,56 +248,68 @@
     <div class="topbar-inner">
       <div class="brand">
         <h1>Gent Vigilon Engineer Reference</h1>
-        <p>Offline quick-reference • Version 5.3</p>
+        <p>Offline quick-reference • Version 6.0</p>
       </div>
       <div class="top-actions">
         <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
-        <button class="info-btn" id="partsBtn" type="button">Parts</button>
-        <button class="info-btn" id="notesBtn" type="button">My Notes</button>
-        <button class="info-btn" id="referenceBtn" type="button">Reference</button>
+        <button class="home-btn" id="homeBtn" type="button">Home</button>
+        <button class="info-btn" id="referenceBtn" type="button">Reference info</button>
         <button class="theme-btn" id="themeBtn" type="button">Dark mode</button>
+        <button id="partsBtn" type="button" hidden>Parts</button>
+        <button id="notesBtn" type="button" hidden>My Notes</button>
       </div>
     </div>
   </header>
 
-  <section class="hero">
-    <h2>What do you need to do?</h2>
-    <p>Search a panel fault/message, procedure, part description or part code. Try “optical heat with sounder”, “S4-770-S”, “TX fault”, “lost device”, “SAFE” or “NVM”.</p>
+  <section class="hero compact-hero">
+    <h2>Find what you need</h2>
+    <p>Search a fault, panel procedure, part description/code or your own notes.</p>
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
-      <input id="search" class="search" type="search" autocomplete="off" placeholder="Example: optical heat sounder, S4-770-S, TX fault, SAFE..." />
+      <input id="search" class="search" type="search" autocomplete="off" placeholder="Try: assign, TX fault, S4-770-S, optical heat sounder..." />
       <button id="clearSearch" class="clear-search" aria-label="Clear search" title="Clear search">×</button>
     </div>
-    <div class="search-hint">Search is not case-sensitive. Common terms are matched too — for example <b>assign</b> will also find allocate/addressing, and part codes can be typed with or without hyphens.</div>
-    <div class="source-note"><strong>Source controlled:</strong> Procedures come from your <em>Gent Vigilon Help Sheet</em>; fault guidance comes from <em>Gent Generic Commissioning Instructions</em>, Appendix B; parts and product images come from the supplied <em>Gent Consultants Specification Guide</em>. No AI diagnosis or outside technical guidance is added.</div>
+    <div class="scope-filters" id="filters"></div>
+    <div class="source-note compact-source"><strong>Source controlled:</strong> panel procedures, Gent fault guidance and the supplied parts guide only. Personal notes are clearly separated.</div>
   </section>
 
-  <div class="section-title"><h2>Quick tasks</h2><span>Common panel jobs</span></div>
-  <section class="quick-grid" id="quickTasksGrid"></section>
+  <div class="home-content" id="homeContent">
+    <div class="section-title"><h2>Quick tasks</h2><span>Common panel jobs</span></div>
+    <section class="quick-grid" id="quickTasksGrid"></section>
 
-  <section class="home-panel" id="homeFavPanel" hidden>
-    <div class="section-title"><h2>Favourites</h2><span>Your starred items</span></div>
-    <div class="mini-grid" id="homeFavGrid"></div>
+    <div class="section-title"><h2>Fault finding</h2><span>Fault message or guided checks</span></div>
+    <section class="home-nav-grid" id="faultNavGrid">
+      <button class="home-nav-card primary-nav" type="button" data-browse="Fault Finder"><strong>Fault Finder</strong><small>Search Gent Appendix B panel messages and initial actions.</small></button>
+      <button class="home-nav-card primary-nav" type="button" data-browse="Guided Fault Flows"><strong>Guided Fault Flows</strong><small>Tap through the flowcharts from your help sheet.</small></button>
+    </section>
+
+    <div class="section-title"><h2>Reference</h2><span>Browse only when you need it</span></div>
+    <section class="home-nav-grid reference-nav" id="referenceNavGrid">
+      <button class="home-nav-card" type="button" data-browse="Procedures"><strong>Procedures</strong><small>Panel paths and engineer reference steps.</small></button>
+      <button class="home-nav-card" type="button" data-browse="Parts"><strong>Parts</strong><small>Find by description or Gent part code.</small></button>
+      <button class="home-nav-card" type="button" data-open-notes-home><strong>My Notes</strong><small>Personal notes stored on this device.</small></button>
+    </section>
+
+    <section class="home-panel" id="homeFavPanel" hidden>
+      <div class="section-title"><h2>Favourites</h2><span>Your starred items</span></div>
+      <div class="mini-grid" id="homeFavGrid"></div>
+    </section>
+
+    <section class="home-panel" id="recentPanel" hidden>
+      <div class="section-title"><h2>Recently viewed</h2><span>Jump back in</span></div>
+      <div class="mini-grid" id="recentGrid"></div>
+    </section>
+
+    <section class="home-panel" id="notesPanel" hidden><div class="mini-grid" id="notesGrid"></div></section>
+    <section id="legacyQuickGrid" hidden><div id="quickGrid"></div></section>
+  </div>
+
+  <section class="results-section" id="resultsSection" hidden>
+    <div class="results-header" id="proceduresHeading"><h2 id="resultsTitle">Results</h2><span id="countText"></span></div>
+    <main class="results" id="results"></main>
   </section>
 
-  <section class="home-panel" id="recentPanel" hidden>
-    <div class="section-title"><h2>Recently viewed</h2><span>Quickly jump back in</span></div>
-    <div class="mini-grid" id="recentGrid"></div>
-  </section>
-
-  <section class="home-panel" id="notesPanel" hidden>
-    <div class="section-title"><h2>My Notes</h2><span>Personal notes • stored on this device</span></div>
-    <div class="mini-grid" id="notesGrid"></div>
-  </section>
-
-  <div class="section-title"><h2>All sections</h2><span>Tap a section</span></div>
-  <section class="quick-grid" id="quickGrid"></section>
-
-  <div class="section-title" id="proceduresHeading"><h2>Reference</h2><span id="countText"></span></div>
-  <div class="filters" id="filters"></div>
-  <main class="results" id="results"></main>
-
-  <div class="footer">Gent Vigilon Engineer Reference • Version 5.3 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
+  <div class="footer">Gent Vigilon Engineer Reference • Version 6.0 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
@@ -519,7 +583,14 @@ const recentPanel = $('#recentPanel');
 const recentGrid = $('#recentGrid');
 const notesPanel = $('#notesPanel');
 const notesGrid = $('#notesGrid');
+const homeContent = $('#homeContent');
+const resultsSection = $('#resultsSection');
+const resultsTitle = $('#resultsTitle');
+const faultNavGrid = $('#faultNavGrid');
+const referenceNavGrid = $('#referenceNavGrid');
 const searchEl = $('#search');
+let focusedItemId = '';
+
 const countText = $('#countText');
 const toastEl = $('#toast');
 const modalBackdrop = $('#modalBackdrop');
@@ -634,9 +705,11 @@ function itemSourceShort(p){
 function openItemById(id){
   const p = allItems.find(x=>x.id===id);
   if(!p) return;
+  focusedItemId = id;
   activeCategory = 'All';
   query = '';
   searchEl.value = '';
+  showResultsView();
   renderFilters();
   renderResults();
   requestAnimationFrame(()=>{
@@ -736,7 +809,7 @@ function openNotesModal(){
   showModal('My Notes', `<div class="notes-warning"><strong>MY NOTES – NOT FROM GENT DOCUMENTATION.</strong><br>Notes are saved only on this device. They are not uploaded to GitHub.</div><div class="modal-actions"><button class="primary" type="button" data-new-note>Add general note</button><button type="button" data-export-notes>Export backup</button><button type="button" data-import-notes>Import backup</button></div>${list}<input id="notesImportFile" type="file" accept="application/json,.json" hidden>`);
 }
 function exportNotes(){
-  const payload={app:'Gent Vigilon Engineer Reference',version:'5.3',exportedAt:new Date().toISOString(),notes:personalNotes};
+  const payload={app:'Gent Vigilon Engineer Reference',version:'6.0',exportedAt:new Date().toISOString(),notes:personalNotes};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='gent-vigilon-notes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -769,9 +842,9 @@ function renderHomePanels(){
   recentPanel.hidden = !recentItems.length;
   recentGrid.innerHTML = recentItems.map(miniButton).join('');
 
-  const recentNotes = [...personalNotes].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,6);
-  notesPanel.hidden = !recentNotes.length;
-  notesGrid.innerHTML = recentNotes.map(noteMiniButton).join('');
+  // Notes remain available from the Reference section rather than taking another home-screen row.
+  notesPanel.hidden = true;
+  notesGrid.innerHTML = '';
 }
 
 document.addEventListener('click',e=>{
@@ -798,22 +871,33 @@ document.addEventListener('change',e=>{
 });
 
 function renderQuick(){
-  quickGrid.innerHTML = quickCats.map(([cat,desc]) => `
-    <button class="quick" data-cat="${escapeHtml(cat)}" type="button">
-      <strong>${escapeHtml(cat)}</strong><small>${escapeHtml(desc)}</small>
-    </button>`).join('');
-  quickGrid.querySelectorAll('.quick').forEach(btn=>btn.addEventListener('click',()=>{
-    activeCategory = btn.dataset.cat;
-    renderFilters(); renderResults();
-    $('#proceduresHeading')?.scrollIntoView({behavior:'smooth',block:'start'});
-  }));
+  // v6.0: the old long category grid is intentionally removed from the home screen.
+  if(quickGrid) quickGrid.innerHTML = '';
+}
+
+function scopeForCategory(cat){
+  if(cat==='Fault Finder' || cat==='Guided Fault Flows' || cat==='Faults') return 'Faults';
+  if(cat==='Parts Reference' || cat==='Parts') return 'Parts';
+  if(cat==='Notes') return 'Notes';
+  if(cat==='All' || cat==='Favourites') return 'All';
+  return 'Procedures';
 }
 
 function renderFilters(){
-  const cats = ['All','Favourites',...new Set(allItems.map(p=>p.cat))];
-  filtersEl.innerHTML = cats.map(cat=>`<button type="button" class="filter ${cat===activeCategory?'active':''}" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`).join('');
-  filtersEl.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
-    activeCategory = btn.dataset.cat; renderFilters(); renderResults();
+  const scopes = ['All','Faults','Procedures','Parts','Notes'];
+  const currentScope = scopeForCategory(activeCategory);
+  filtersEl.className = 'scope-filters';
+  filtersEl.innerHTML = scopes.map(scope=>`<button type="button" class="scope-filter ${scope===currentScope?'active':''}" data-scope="${scope}">${scope}</button>`).join('');
+  filtersEl.querySelectorAll('[data-scope]').forEach(btn=>btn.addEventListener('click',()=>{
+    focusedItemId='';
+    activeCategory = btn.dataset.scope;
+    if(activeCategory==='All' && !query.trim()){
+      goHome();
+      return;
+    }
+    showResultsView();
+    renderFilters();
+    renderResults();
   }));
 }
 
@@ -942,26 +1026,63 @@ function renderCard(p){
     body += `<div class="related"><div class="label">My personal notes – not from Gent documentation</div>${itemNotes.map(n=>`<div class="personal-note"><div class="note-head"><div class="note-title">${escapeHtml(n.title||'My note')}</div><button class="action" type="button" data-edit-note="${escapeHtml(n.id)}">Edit</button></div><div class="note-text">${escapeHtml(n.text)}</div><div class="note-meta">Updated ${escapeHtml(formatNoteDate(n.updatedAt))}</div></div>`).join('')}</div>`;
   }
   body += `<div class="card-actions"><button class="action" data-add-note-item="${p.id}" type="button">${itemNotes.length?`Add another note (${itemNotes.length})`:'Add note'}</button><button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy ${p.type==='part'?'part details':p.type==='fault'?'fault guidance':p.type==='flow'?'flow text':'procedure'}</button><button class="action print" type="button">Print</button></div>`;
-  const sourceMeta = p.type==='part' ? `Specification Guide p.${p.page}` : p.type==='fault' ? `Gent Manual p.${p.page}` : p.type==='flow' ? `Help Sheet flow p.${p.page}` : `Help Sheet p.${p.page}`;
+  const compactMeta = p.type==='part' ? p.partGroup : p.type==='fault' ? 'Fault message' : p.type==='flow' ? 'Guided fault flow' : p.cat;
+  const compactTitle = p.type==='part'
+    ? `<span class="part-summary-code">${highlight(p.code)}</span> <span class="part-summary-name">${highlight(p.name)}</span>`
+    : highlight(p.title);
   return `<details class="card" data-id="${p.id}">
     <summary>
       <div class="badge">${categoryCodes[p.cat]||'VG'}</div>
-      <div class="summary-text"><h3>${highlight(p.title)}</h3><div class="meta"><span>${escapeHtml(p.cat)}</span><span>•</span><span>${sourceMeta}</span>${p.clearType?`<span>•</span><span>${escapeHtml(p.clearType)}</span>`:''}</div></div>
+      <div class="summary-text"><h3>${compactTitle}</h3><div class="meta"><span>${escapeHtml(compactMeta)}</span>${p.clearType?`<span>•</span><span>${escapeHtml(p.clearType)}</span>`:''}</div></div>
       <button class="fav ${isFav?'on':''}" data-fav="${p.id}" type="button" aria-label="Favourite" title="Favourite">${isFav?'★':'☆'}</button>
     </summary>
     <div class="content">${body}</div>
   </details>`;
 }
 
-function renderResults(){
-  const filtered = allItems.filter(p=>{
-    const catOk = activeCategory==='All' || (activeCategory==='Favourites' ? favs.has(p.id) : p.cat===activeCategory);
-    const qOk = matchesSearch(p, query);
-    return catOk && qOk;
-  });
-  countText.textContent = `${filtered.length} of ${allItems.length}`;
-  resultsEl.innerHTML = filtered.length ? filtered.map(renderCard).join('') : `<div class="empty"><strong>No match found.</strong><br>Search is not case-sensitive. Try terms such as “assign”, “S4-710”, “optical heat”, “sounder”, “MCP”, “tx”, “loop split”, “SAFE” or “NVM”.</div>`;
+function noteMatchesSearch(n, rawQuery){
+  const q = normaliseSearchText(rawQuery);
+  if(!q) return true;
+  const linked = n.itemId ? allItems.find(x=>x.id===n.itemId)?.title || '' : '';
+  const text = normaliseSearchText([n.title||'',n.text||'',linked].join(' '));
+  return q.split(' ').filter(Boolean).every(term=>searchAlternatives(term).some(alt=>text.includes(alt)));
+}
 
+function itemMatchesActiveView(p){
+  if(focusedItemId) return p.id===focusedItemId;
+  if(activeCategory==='All') return true;
+  if(activeCategory==='Favourites') return favs.has(p.id);
+  if(activeCategory==='Faults') return p.type==='fault' || p.type==='flow';
+  if(activeCategory==='Procedures') return p.type!=='fault' && p.type!=='flow' && p.type!=='part';
+  if(activeCategory==='Parts') return p.type==='part';
+  if(activeCategory==='Notes') return false;
+  return p.cat===activeCategory;
+}
+
+function resultGroupKey(p, browsing=false){
+  if(focusedItemId) return 'Selected item';
+  if(query.trim()){
+    if(p.type==='flow') return 'Guided fault flows';
+    if(p.type==='fault') return 'Fault messages';
+    if(p.type==='part') return 'Parts';
+    return 'Procedures';
+  }
+  if(activeCategory==='Procedures') return p.cat;
+  if(activeCategory==='Parts') return p.partGroup || 'Parts';
+  if(activeCategory==='Faults') return p.type==='flow' ? 'Guided fault flows' : 'Fault messages';
+  if(activeCategory==='Favourites') return 'Favourites';
+  if(activeCategory==='Fault Finder' || activeCategory==='Guided Fault Flows') return activeCategory;
+  if(activeCategory!=='All') return activeCategory;
+  return p.type==='flow'?'Guided fault flows':p.type==='fault'?'Fault messages':p.type==='part'?'Parts':'Procedures';
+}
+
+function renderNoteResult(n){
+  const linked = n.itemId ? noteItemTitle(n) : 'General note';
+  const preview = n.text.length>180 ? n.text.slice(0,180)+'…' : n.text;
+  return `<div class="note-search-card"><strong>${escapeHtml(n.title||linked)}</strong><p>${escapeHtml(preview)}</p><small>${escapeHtml(linked)} • ${escapeHtml(formatNoteDate(n.updatedAt))}</small><button type="button" data-open-note="${escapeHtml(n.id)}">Open note</button></div>`;
+}
+
+function bindResultActions(){
   resultsEl.querySelectorAll('[data-fav]').forEach(btn=>btn.addEventListener('click',e=>{
     e.preventDefault(); e.stopPropagation();
     const id = btn.dataset.fav;
@@ -980,10 +1101,62 @@ function renderResults(){
 
   resultsEl.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{
     const p = allItems.find(x=>x.id===btn.dataset.id);
-    try{await navigator.clipboard.writeText(itemText(p)); showToast(p.type==='fault'?'Fault guidance copied':p.type==='flow'?'Flow text copied':'Procedure copied');}
+    try{await navigator.clipboard.writeText(itemText(p)); showToast(p.type==='fault'?'Fault guidance copied':p.type==='flow'?'Flow text copied':p.type==='part'?'Part details copied':'Procedure copied');}
     catch{showToast('Copy is blocked in this browser');}
   }));
   resultsEl.querySelectorAll('.print').forEach(btn=>btn.addEventListener('click',()=>window.print()));
+}
+
+function renderResults(){
+  const filtered = allItems.filter(p=>itemMatchesActiveView(p) && matchesSearch(p,query));
+  const includeNotes = !focusedItemId && (activeCategory==='All' || activeCategory==='Notes') && (query.trim() || activeCategory==='Notes');
+  const noteMatches = includeNotes ? personalNotes.filter(n=>noteMatchesSearch(n,query)).sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')) : [];
+  const total = filtered.length + noteMatches.length;
+
+  if(!focusedItemId && activeCategory==='All' && !query.trim()){
+    resultsSection.hidden = true;
+    homeContent.hidden = false;
+    countText.textContent='';
+    resultsEl.innerHTML='';
+    return;
+  }
+
+  showResultsView();
+  if(focusedItemId) resultsTitle.textContent='Selected item';
+  else if(query.trim()) resultsTitle.textContent=`Search: “${query.trim()}”`;
+  else if(activeCategory==='Parts') resultsTitle.textContent='Parts Reference';
+  else if(activeCategory==='Procedures') resultsTitle.textContent='Procedures';
+  else if(activeCategory==='Faults') resultsTitle.textContent='Fault Finding';
+  else if(activeCategory==='Notes') resultsTitle.textContent='My Notes';
+  else resultsTitle.textContent=activeCategory;
+  countText.textContent = `${total} result${total===1?'':'s'}`;
+
+  if(!total){
+    resultsEl.innerHTML = `<div class="empty"><strong>No match found.</strong><br>Try a shorter term or switch the filter to <strong>All</strong>.</div>`;
+    return;
+  }
+
+  const groups = new Map();
+  filtered.forEach(p=>{
+    const key=resultGroupKey(p);
+    if(!groups.has(key)) groups.set(key,[]);
+    groups.get(key).push(p);
+  });
+
+  const preferredOrder=['Selected item','Guided fault flows','Fault messages','Procedures','Parts','My Notes'];
+  const entries=[...groups.entries()].sort((a,b)=>{
+    const ai=preferredOrder.indexOf(a[0]), bi=preferredOrder.indexOf(b[0]);
+    if(ai>=0 || bi>=0) return (ai<0?99:ai)-(bi<0?99:bi);
+    return a[0].localeCompare(b[0]);
+  });
+  if(noteMatches.length) entries.push(['My Notes',noteMatches]);
+
+  resultsEl.innerHTML = entries.map(([label,items])=>{
+    const isNotes=label==='My Notes';
+    const html=isNotes ? items.map(renderNoteResult).join('') : items.map(renderCard).join('');
+    return `<section class="result-group"><div class="result-group-title"><span>${escapeHtml(label)}</span><span>${items.length}</span></div><div class="result-group-list">${html}</div></section>`;
+  }).join('');
+  bindResultActions();
 }
 
 
@@ -1009,8 +1182,52 @@ function showToast(msg){
   clearTimeout(showToast.t); showToast.t = setTimeout(()=>toastEl.classList.remove('show'),1600);
 }
 
-searchEl.addEventListener('input',()=>{query=searchEl.value; renderResults();});
-$('#clearSearch').addEventListener('click',()=>{searchEl.value='';query='';searchEl.focus();renderResults();});
+function showResultsView(){
+  homeContent.hidden = true;
+  resultsSection.hidden = false;
+}
+function goHome(){
+  focusedItemId='';
+  activeCategory='All';
+  query='';
+  searchEl.value='';
+  homeContent.hidden=false;
+  resultsSection.hidden=true;
+  renderFilters();
+  renderHomePanels();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function browseView(view){
+  focusedItemId='';
+  query='';
+  searchEl.value='';
+  if(view==='Parts') activeCategory='Parts';
+  else if(view==='Procedures') activeCategory='Procedures';
+  else activeCategory=view;
+  showResultsView();
+  renderFilters();
+  renderResults();
+  $('#proceduresHeading')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+searchEl.addEventListener('input',()=>{
+  focusedItemId='';
+  query=searchEl.value;
+  if(query.trim()) showResultsView();
+  else if(activeCategory==='All') { goHome(); return; }
+  renderResults();
+});
+$('#clearSearch').addEventListener('click',()=>{
+  searchEl.value=''; query=''; focusedItemId='';
+  if(activeCategory==='All') goHome(); else renderResults();
+  searchEl.focus();
+});
+$('#homeBtn').addEventListener('click',goHome);
+document.addEventListener('click',e=>{
+  const browse=e.target.closest('[data-browse]');
+  if(browse){browseView(browse.dataset.browse);return;}
+  if(e.target.closest('[data-open-notes-home]')){openNotesModal();return;}
+});
 
 const savedTheme = localStorage.getItem('gentVigilonTheme');
 if(savedTheme==='dark') document.documentElement.dataset.theme='dark';
@@ -1022,7 +1239,7 @@ $('#themeBtn').addEventListener('click',()=>{
   updateThemeButton();
 });
 
-$('#partsBtn').addEventListener('click',()=>{activeCategory='Parts Reference';query='';searchEl.value='';renderFilters();renderResults();$('#proceduresHeading')?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>searchEl.focus(),350);});
+$('#partsBtn').addEventListener('click',()=>browseView('Parts'));
 $('#notesBtn').addEventListener('click', openNotesModal);
 $('#referenceBtn').addEventListener('click', openReferenceModal);
 $('#modalClose').addEventListener('click', closeModal);
@@ -1051,6 +1268,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 }
 
 renderHomePanels(); renderQuick(); renderFilters(); renderResults(); updateThemeButton();
+goHome();
 </script>
 </body>
 </html>
