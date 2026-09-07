@@ -187,6 +187,18 @@
     .part-meta{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
     .part-pill{display:inline-block;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 8px;font-size:.78rem}
     .part-source-img{font-size:.72rem;color:var(--muted);text-align:center;margin-top:7px}
+    .part-image-btn{width:100%;font:inherit;color:inherit;cursor:zoom-in}
+    .part-image-btn:hover{border-color:var(--brand)}
+    .enlarged-part-image{display:block;max-width:100%;max-height:68vh;object-fit:contain;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px}
+    .recent-searches{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:8px 2px 0}
+    .recent-searches[hidden]{display:none!important}
+    .recent-searches-label{font-size:.76rem;color:var(--muted);font-weight:750}
+    .recent-search-chip{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:6px 9px;cursor:pointer;font-size:.78rem}
+    .recent-search-chip:hover{border-color:var(--brand)}
+    .compat-scope{color:var(--muted);font-weight:650}
+    .item-about{margin-top:12px;padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:.72rem}
+    .setting-state{display:inline-block;margin-left:5px;font-size:.72rem;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:2px 6px;background:var(--bg)}
+    .setting-state.on{background:var(--ok)}
     @media(max-width:620px){.part-layout{grid-template-columns:1fr}.part-image{min-height:120px}.part-image img{max-height:190px}}
 
     /* v6.0 navigation refresh */
@@ -297,7 +309,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <h1>Gent Vigilon Engineer Reference</h1>
-        <p>Offline quick-reference • Version 6.2</p>
+        <p>Offline quick-reference • Version 6.3</p>
       </div>
       <div class="top-actions">
         <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
@@ -323,6 +335,7 @@
       <input id="search" class="search" type="search" autocomplete="off" placeholder="Try: assign, TX fault, S4-770-S, optical heat sounder..." />
       <button id="clearSearch" class="clear-search" aria-label="Clear search" title="Clear search">×</button>
     </div>
+    <div class="recent-searches" id="recentSearches" hidden></div>
     <div class="scope-filters" id="filters"></div>
     <div class="source-note compact-source"><strong>Source controlled:</strong> panel procedures, Gent fault guidance and the supplied parts guide only. Personal notes are clearly separated.</div>
   </section>
@@ -363,7 +376,7 @@
     <main class="results" id="results"></main>
   </section>
 
-  <div class="footer">Gent Vigilon Engineer Reference • Version 6.2 • <span class="version-status" id="connectionStatus">Offline ready</span> • Verify site-specific programming before making changes.</div>
+  <div class="footer">Gent Vigilon Engineer Reference • Version 6.3 • <span class="version-status" id="connectionStatus">Offline ready</span> • Verify site-specific programming before making changes.</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="compare-bar" id="compareBar" hidden><div><strong id="compareBarTitle">Compare parts</strong><small id="compareBarText">Select another part to compare.</small></div><button id="cancelCompareBtn" type="button">Cancel</button></div>
@@ -648,6 +661,14 @@ let customAliases = (()=>{
     return Array.isArray(data) ? data.filter(a=>a&&typeof a.from==='string'&&Array.isArray(a.targets)) : [];
   }catch{return [];}
 })();
+let recentSearches = (()=>{
+  try{
+    const data=JSON.parse(localStorage.getItem('gentVigilonRecentSearchesV1') || '[]');
+    return Array.isArray(data) ? data.map(String).map(x=>x.trim()).filter(Boolean).slice(0,5) : [];
+  }catch{return [];}
+})();
+let keepAwakeEnabled = localStorage.getItem('gentVigilonKeepAwakeV1') === 'true';
+let wakeLockSentinel = null;
 
 const $ = s => document.querySelector(s);
 const resultsEl = $('#results');
@@ -666,6 +687,7 @@ const resultsTitle = $('#resultsTitle');
 const faultNavGrid = $('#faultNavGrid');
 const referenceNavGrid = $('#referenceNavGrid');
 const searchEl = $('#search');
+const recentSearchesEl = $('#recentSearches');
 let focusedItemId = '';
 
 const countText = $('#countText');
@@ -890,6 +912,101 @@ function itemSourceShort(p){
   return `${p.cat} • p.${p.page}`;
 }
 
+function panelScopeLabel(p){
+  // Only show model scope where the supplied source clearly supports it.
+  if(p.type==='fault') return 'Vigilon Plus + Compact Plus';
+  if(p.type==='flow') return 'Vigilon';
+  if(p.type==='part') {
+    const code=String(p.code||'').toUpperCase();
+    const name=String(p.name||'').toLowerCase();
+    if(code.startsWith('COMPACT') || name.includes('compact')) return 'Compact Plus';
+    if(code.startsWith('VIG') || name.includes('vigilon')) return 'Vigilon Plus';
+    return '';
+  }
+  return 'Vigilon';
+}
+
+function itemAboutText(p){
+  if(p.type==='part') return `Gent Specification Guide • p.${p.page}`;
+  if(p.type==='fault') return `Gent Commissioning Manual • Appendix B • p.${p.page}`;
+  if(p.type==='flow') return `Gent Vigilon Help Sheet • flowchart p.${p.page}`;
+  return `Gent Vigilon Help Sheet • p.${p.page}`;
+}
+
+function saveRecentSearches(){
+  localStorage.setItem('gentVigilonRecentSearchesV1', JSON.stringify(recentSearches));
+}
+function recordRecentSearch(raw){
+  const value=String(raw||'').trim();
+  if(value.length<2) return;
+  const norm=normaliseSearchText(value);
+  recentSearches=[value,...recentSearches.filter(x=>normaliseSearchText(x)!==norm)].slice(0,5);
+  saveRecentSearches();
+  renderRecentSearches();
+}
+function renderRecentSearches(forceShow=false){
+  if(!recentSearchesEl) return;
+  const shouldShow=(forceShow || document.activeElement===searchEl) && !searchEl.value.trim() && recentSearches.length;
+  recentSearchesEl.hidden=!shouldShow;
+  recentSearchesEl.innerHTML=shouldShow ? `<span class="recent-searches-label">Recent:</span>${recentSearches.map(x=>`<button class="recent-search-chip" type="button" data-recent-search="${escapeHtml(x)}">${escapeHtml(x)}</button>`).join('')}` : '';
+}
+
+async function shareItem(p){
+  if(!p) return;
+  const text=itemText(p);
+  const title=p.type==='part' ? `${p.code} — ${p.name}` : p.title;
+  if(navigator.share){
+    try{await navigator.share({title,text});return;}catch(err){if(err && err.name==='AbortError') return;}
+  }
+  try{await navigator.clipboard.writeText(text);showToast('Share is unavailable — copied instead');}
+  catch{showToast('Share is unavailable on this device');}
+}
+
+async function requestWakeLock(){
+  if(!keepAwakeEnabled || document.visibilityState!=='visible') return;
+  if(!('wakeLock' in navigator)){showToast('Keep screen awake is not supported by this browser');return;}
+  try{
+    wakeLockSentinel=await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release',()=>{wakeLockSentinel=null;});
+  }catch{showToast('Could not keep the screen awake');}
+}
+async function setKeepAwake(enabled,feedback=true){
+  keepAwakeEnabled=!!enabled;
+  localStorage.setItem('gentVigilonKeepAwakeV1', keepAwakeEnabled?'true':'false');
+  if(keepAwakeEnabled){
+    await requestWakeLock();
+    if(feedback) showToast('Keep screen awake enabled');
+  }else{
+    if(wakeLockSentinel){try{await wakeLockSentinel.release();}catch{} wakeLockSentinel=null;}
+    if(feedback) showToast('Keep screen awake disabled');
+  }
+}
+
+function openPartImage(id){
+  const p=parts.find(x=>x.id===id);
+  if(!p || !p.image){showToast('No separate product image is available');return;}
+  showModal(`${p.code} — ${p.name}`, `<img class="enlarged-part-image" src="${p.image}" alt="${escapeHtml(p.name)}"><div class="item-about">Image from supplied Gent Specification Guide • p.${p.page}</div><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
+}
+
+function resetPreferences(){
+  if(!confirm('Reset app preferences?\n\nThis resets Quick Tasks, custom search aliases, recent searches, theme and Keep Screen Awake. Your Notes, Favourites and Recently Viewed items will NOT be deleted.')) return;
+  quickTaskIds=[...defaultQuickTaskIds];
+  customAliases=[];
+  recentSearches=[];
+  compareSelection=[];
+  saveQuickTasks();
+  saveCustomAliases();
+  saveRecentSearches();
+  localStorage.setItem('gentVigilonTheme','light');
+  document.documentElement.dataset.theme='';
+  setKeepAwake(false,false);
+  updateThemeButton();
+  clearCompareSelection();
+  closeModal();
+  renderHomePanels();renderFilters();renderResults();renderRecentSearches();
+  showToast('Preferences reset — notes kept');
+}
+
 function openItemById(id){
   const p = allItems.find(x=>x.id===id);
   if(!p) return;
@@ -997,7 +1114,7 @@ function openNotesModal(){
   showModal('My Notes', `<div class="notes-warning"><strong>MY NOTES – NOT FROM GENT DOCUMENTATION.</strong><br>Notes are saved only on this device. They are not uploaded to GitHub.</div><div class="modal-actions"><button class="primary" type="button" data-new-note>Add general note</button><button type="button" data-export-notes>Export backup</button><button type="button" data-import-notes>Import backup</button></div>${list}<input id="notesImportFile" type="file" accept="application/json,.json" hidden>`);
 }
 function exportNotes(){
-  const payload={app:'Gent Vigilon Engineer Reference',version:'6.2',exportedAt:new Date().toISOString(),notes:personalNotes};
+  const payload={app:'Gent Vigilon Engineer Reference',version:'6.3',exportedAt:new Date().toISOString(),notes:personalNotes};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='gent-vigilon-notes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -1055,19 +1172,21 @@ function deleteAlias(id){
 }
 function fullBackupPayload(){
   return {
-    app:'Gent Vigilon Engineer Reference',backupType:'full-app',version:'6.2',exportedAt:new Date().toISOString(),
+    app:'Gent Vigilon Engineer Reference',backupType:'full-app',version:'6.3',exportedAt:new Date().toISOString(),
     notes:personalNotes,
     favourites:[...favs],
     recent:recentIds,
     quickTasks:quickTaskIds,
     customAliases:customAliases,
+    recentSearches:recentSearches,
+    keepAwake:keepAwakeEnabled,
     theme:document.documentElement.dataset.theme==='dark'?'dark':'light'
   };
 }
 function exportFullBackup(){
   const blob=new Blob([JSON.stringify(fullBackupPayload(),null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download='gent-vigilon-full-backup-v6-2.json'; document.body.appendChild(a); a.click(); a.remove();
+  a.href=url; a.download='gent-vigilon-full-backup-v6-3.json'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000); showToast('Full app backup exported');
 }
 function importFullBackupFile(file){
@@ -1085,9 +1204,11 @@ function importFullBackupFile(file){
       recentIds=(Array.isArray(data.recent)?data.recent:[]).filter(id=>allItems.some(x=>x.id===id)).slice(0,8);
       quickTaskIds=data.quickTasks.filter(id=>allItems.some(x=>x.id===id)).slice(0,10);
       customAliases=data.customAliases.filter(a=>a&&typeof a.from==='string'&&Array.isArray(a.targets)).map(a=>({id:a.id||newAliasId(),from:String(a.from).trim(),targets:a.targets.map(String).map(x=>x.trim()).filter(Boolean).slice(0,8)})).filter(a=>a.from&&a.targets.length);
-      saveNotes(); localStorage.setItem('gentVigilonFavs',JSON.stringify([...favs])); localStorage.setItem('gentVigilonRecent',JSON.stringify(recentIds)); saveQuickTasks(); saveCustomAliases();
+      recentSearches=(Array.isArray(data.recentSearches)?data.recentSearches:[]).map(String).map(x=>x.trim()).filter(Boolean).slice(0,5);
+      keepAwakeEnabled=!!data.keepAwake;
+      saveNotes(); localStorage.setItem('gentVigilonFavs',JSON.stringify([...favs])); localStorage.setItem('gentVigilonRecent',JSON.stringify(recentIds)); saveQuickTasks(); saveCustomAliases(); saveRecentSearches(); localStorage.setItem('gentVigilonKeepAwakeV1',keepAwakeEnabled?'true':'false');
       const theme=data.theme==='dark'?'dark':'light'; localStorage.setItem('gentVigilonTheme',theme); document.documentElement.dataset.theme=theme==='dark'?'dark':''; updateThemeButton();
-      closeModal(); renderHomePanels(); renderFilters(); renderResults(); showToast('Full app backup restored');
+      closeModal(); renderHomePanels(); renderFilters(); renderResults(); renderRecentSearches(); if(keepAwakeEnabled) requestWakeLock(); showToast('Full app backup restored');
     }catch{showToast('That file is not a valid full app backup');}
   };
   reader.readAsText(file);
@@ -1166,6 +1287,14 @@ function renderHomePanels(){
 }
 
 document.addEventListener('click',e=>{
+  const recentSearchBtn=e.target.closest('[data-recent-search]');
+  if(recentSearchBtn){
+    focusedItemId='';query=recentSearchBtn.dataset.recentSearch||'';searchEl.value=query;recordRecentSearch(query);showResultsView();renderResults();renderRecentSearches(false);return;
+  }
+  const enlargeBtn=e.target.closest('[data-enlarge-part]');
+  if(enlargeBtn){openPartImage(enlargeBtn.dataset.enlargePart);return;}
+  if(e.target.closest('[data-toggle-wake-lock]')){setKeepAwake(!keepAwakeEnabled).then(openReferenceModal);return;}
+  if(e.target.closest('[data-reset-preferences]')){resetPreferences();return;}
   const suggestionBtn=e.target.closest('[data-search-suggestion]');
   if(suggestionBtn){
     focusedItemId='';
@@ -1175,7 +1304,7 @@ document.addEventListener('click',e=>{
     return;
   }
   const btn = e.target.closest('[data-open-item]');
-  if(btn){ openItemById(btn.dataset.openItem); return; }
+  if(btn){ if(query.trim()) recordRecentSearch(query); openItemById(btn.dataset.openItem); return; }
   const noteBtn=e.target.closest('[data-open-note]');
   if(noteBtn){ openNoteView(noteBtn.dataset.openNote); return; }
   const editBtn=e.target.closest('[data-edit-note]');
@@ -1321,7 +1450,9 @@ function openSourceModal(id){
   showModal('Source', `<div class="fact"><strong>${escapeHtml(si.doc)}</strong><br>${escapeHtml(si.detail)}</div><p>This item is based only on the supplied source shown above. The source PDFs are intentionally not included in this public GitHub Pages build. Keep your original PDFs locally for verification.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
 }
 function openReferenceModal(){
-  showModal('Settings & reference', `<div class="settings-actions"><button class="primary" type="button" data-manage-aliases>Search aliases<small>Teach search the wording you use.</small></button><button type="button" data-export-full-backup>Export full app backup<small>Notes, favourites, Quick Tasks, aliases and preferences.</small></button><button type="button" data-import-full-backup>Restore full app backup<small>Move your setup to another phone/computer or restore it later.</small></button><button type="button" data-modal-close>Close<small>Return to the reference app.</small></button></div><input id="fullBackupImportFile" type="file" accept="application/json,.json" hidden><div class="fact"><strong>App version</strong><br>Version 6.2 • Offline/PWA build.</div><div class="fact"><strong>App content basis</strong><br>Gent Vigilon Help Sheet + Gent Generic Commissioning Instructions + Gent Consultants Specification Guide.</div><div class="fact"><strong>Gent manual</strong><br>Issue 9 • 05/17 • Generic Vigilon Plus & Compact Plus commissioning instructions.</div><div class="fact"><strong>Manual scope</strong><br>The manual states it covers Vigilon Plus 4/6-loop panels, Vigilon Compact Plus panels and Vigilon Plus Network Nodes with MCC/MCB software version 4.54 or higher.</div><p>No AI-generated diagnosis or outside technical guidance is included in the app. Fault meanings and initial actions are taken from Appendix B; procedures and guided flows are taken from the supplied help sheet; the parts reference and product images are taken from the supplied Gent Consultants Specification Guide.</p><p><strong>Public web build:</strong> the source PDFs are not included. Keep your original copies locally.</p>`);
+  const awakeSupported='wakeLock' in navigator;
+  const awakeState=keepAwakeEnabled?'On':'Off';
+  showModal('Settings & reference', `<div class="settings-actions"><button class="primary" type="button" data-manage-aliases>Search aliases<small>Teach search the wording you use.</small></button><button type="button" data-toggle-wake-lock>Keep screen awake <span class="setting-state ${keepAwakeEnabled?'on':''}">${awakeState}</span><small>${awakeSupported?'Stops the display sleeping while the app is open.':'Not supported by this browser.'}</small></button><button type="button" data-export-full-backup>Export full app backup<small>Notes, favourites, Quick Tasks, aliases, recent searches and preferences.</small></button><button type="button" data-import-full-backup>Restore full app backup<small>Move your setup to another phone/computer or restore it later.</small></button><button type="button" data-reset-preferences>Reset preferences only<small>Resets Quick Tasks, aliases, recent searches, theme and keep-awake. Notes stay safe.</small></button><button type="button" data-modal-close>Close<small>Return to the reference app.</small></button></div><input id="fullBackupImportFile" type="file" accept="application/json,.json" hidden><div class="fact"><strong>App version</strong><br>Version 6.3 • Offline/PWA build.</div><div class="fact"><strong>App content basis</strong><br>Gent Vigilon Help Sheet + Gent Generic Commissioning Instructions + Gent Consultants Specification Guide.</div><div class="fact"><strong>Gent manual</strong><br>Issue 9 • 05/17 • Generic Vigilon Plus & Compact Plus commissioning instructions.</div><div class="fact"><strong>Manual scope</strong><br>The manual states it covers Vigilon Plus 4/6-loop panels, Vigilon Compact Plus panels and Vigilon Plus Network Nodes with MCC/MCB software version 4.54 or higher.</div><p>No AI-generated diagnosis or outside technical guidance is included in the app. Fault meanings and initial actions are taken from Appendix B; procedures and guided flows are taken from the supplied help sheet; the parts reference and product images are taken from the supplied Gent Consultants Specification Guide.</p><p><strong>Public web build:</strong> the source PDFs are not included. Keep your original copies locally.</p>`);
 }
 
 
@@ -1329,12 +1460,12 @@ function renderCard(p){
   const isFav = favs.has(p.id);
   let body = '';
   if(p.type==='part'){
-    const img = p.image ? `<div><div class="part-image"><img src="${p.image}" alt="${escapeHtml(p.name)}"></div><div class="part-source-img">Image from supplied Gent Specification Guide</div></div>` : `<div class="part-image"><div class="part-no-image">No separate product image is shown for this part in the supplied source guide.</div></div>`;
+    const img = p.image ? `<div><button class="part-image part-image-btn" data-enlarge-part="${p.id}" type="button" aria-label="Enlarge ${escapeHtml(p.name)} image"><img src="${p.image}" alt="${escapeHtml(p.name)}"></button><div class="part-source-img">Tap image to enlarge • supplied Gent Specification Guide</div></div>` : `<div class="part-image"><div class="part-no-image">No separate product image is shown for this part in the supplied source guide.</div></div>`;
     body += `<div class="part-layout">${img}<div><div class="part-code">${highlight(p.code)}</div><div class="part-desc">${highlight(p.description)}</div>${p.features?.length?`<div class="label">What it does / key features</div><ul class="part-features">${p.features.map(x=>`<li>${highlight(x)}</li>`).join('')}</ul>`:''}${p.compatible?.length?`<div class="part-meta"><span class="part-pill">Related / compatible: ${p.compatible.map(escapeHtml).join(', ')}</span></div>`:''}${p.aliases?.length?`<div class="part-meta"><span class="part-pill">Also searchable as: ${p.aliases.map(escapeHtml).join(', ')}</span></div>`:''}${p.partNote?`<div class="note">${highlight(p.partNote)}</div>`:''}</div></div>`;
-    body += `<div class="source-line">Source: Gent Consultants Specification Guide • p.${p.page}</div>`;
+    body += `<div class="item-about">About this item • ${escapeHtml(itemAboutText(p))}</div>`;
   } else if(p.type==='flow'){
     body += `<div class="flow-shell"><div class="flow-intro"><strong>Guided version of the original help-sheet flowchart.</strong> No extra troubleshooting steps have been added. Where the original chart ends at an action, this guided flow ends there too.</div>${referenceTable(p)}<button class="action" data-flow-action="start" data-flow-id="${p.id}" type="button">Start guided flow</button><div class="flow-runner" data-flow-runner="${p.id}"></div></div>`;
-    body += `<div class="source-line">Source: Gent Vigilon Help Sheet • Fault Finding Flow Chart • p.${p.page}</div>`;
+    body += `<div class="item-about">About this item • ${escapeHtml(itemAboutText(p))}</div>`;
   } else if(p.type==='fault'){
     body += `<div class="fault-grid">
       <div class="faultbox"><div class="label">Associated with</div><div>${highlight(p.associated)}</div></div>
@@ -1345,7 +1476,7 @@ function renderCard(p){
       const msg = p.clearType==='Latching' ? 'Appendix B states latching fault events are cleared by re-allocating the loop circuit.' : p.clearType==='Repairable' ? 'Appendix B describes repairable faults as requiring manual intervention and the panel Loop → Repair command.' : 'Appendix B identifies this as a clearable fault event; if the fault is still current it will reappear after clearing.';
       body += `<div class="note ${p.clearType==='Repairable'?'critical':''}"><strong>${escapeHtml(p.clearType)} fault:</strong> ${escapeHtml(msg)}</div>`;
     }
-    body += `<div class="source-line">Source: Gent Generic Commissioning Instructions • Appendix B • p.${p.page}</div>`;
+    body += `<div class="item-about">About this item • ${escapeHtml(itemAboutText(p))}</div>`;
   } else {
     if(p.path){
       body += `<div class="label">Panel path</div><div class="path">${p.path.map((x,i)=>`${i?'<span class="arrow">→</span>':''}<span class="step">${highlight(x)}</span>`).join('')}</div>`;
@@ -1356,7 +1487,7 @@ function renderCard(p){
     if(p.note){
       body += `<div class="note ${p.critical?'critical':''}">${highlight(p.note)}</div>`;
     }
-    body += `<div class="source-line">Source: Gent Vigilon Help Sheet • p.${p.page}</div>`;
+    body += `<div class="item-about">About this item • ${escapeHtml(itemAboutText(p))}</div>`;
   }
   body += relatedHtml(p);
   const itemNotes = notesForItem(p.id);
@@ -1364,15 +1495,16 @@ function renderCard(p){
     body += `<div class="related"><div class="label">My personal notes – not from Gent documentation</div>${itemNotes.map(n=>`<div class="personal-note"><div class="note-head"><div class="note-title">${escapeHtml(n.title||'My note')}</div><button class="action" type="button" data-edit-note="${escapeHtml(n.id)}">Edit</button></div><div class="note-text">${escapeHtml(n.text)}</div><div class="note-meta">Updated ${escapeHtml(formatNoteDate(n.updatedAt))}</div></div>`).join('')}</div>`;
   }
   const isQuickPinned=quickTaskIds.includes(p.id);
-  body += `<div class="card-actions"><button class="action" data-add-note-item="${p.id}" type="button">${itemNotes.length?`Add another note (${itemNotes.length})`:'Add note'}</button><button class="action ${isQuickPinned?'quick-pin-on':''}" data-quick-pin="${p.id}" type="button">${isQuickPinned?'Remove from Quick Tasks':'Pin to Quick Tasks'}</button>${p.type==='part'?`<button class="action" data-compare-part="${p.id}" type="button">Compare</button>`:''}<button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy for engineer</button><button class="action print" type="button">Print</button></div>`;
+  body += `<div class="card-actions"><button class="action" data-add-note-item="${p.id}" type="button">${itemNotes.length?`Add another note (${itemNotes.length})`:'Add note'}</button><button class="action ${isQuickPinned?'quick-pin-on':''}" data-quick-pin="${p.id}" type="button">${isQuickPinned?'Remove from Quick Tasks':'Pin to Quick Tasks'}</button>${p.type==='part'?`<button class="action" data-compare-part="${p.id}" type="button">Compare</button>`:''}<button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy for engineer</button><button class="action share" data-id="${p.id}" type="button">Share</button><button class="action print" type="button">Print</button></div>`;
   const compactMeta = p.type==='part' ? p.partGroup : p.type==='fault' ? 'Fault message' : p.type==='flow' ? 'Guided fault flow' : p.cat;
+  const panelScope=panelScopeLabel(p);
   const compactTitle = p.type==='part'
     ? `<span class="part-summary-code">${highlight(p.code)}</span> <span class="part-summary-name">${highlight(p.name)}</span>`
     : highlight(p.title);
   return `<details class="card" data-id="${p.id}">
     <summary>
       <div class="badge">${categoryCodes[p.cat]||'VG'}</div>
-      <div class="summary-text"><h3>${compactTitle}</h3><div class="meta"><span>${escapeHtml(compactMeta)}</span>${p.clearType?`<span>•</span><span>${escapeHtml(p.clearType)}</span>`:''}</div></div>
+      <div class="summary-text"><h3>${compactTitle}</h3><div class="meta"><span>${escapeHtml(compactMeta)}</span>${panelScope?`<span>•</span><span class="compat-scope">${escapeHtml(panelScope)}</span>`:''}${p.clearType?`<span>•</span><span>${escapeHtml(p.clearType)}</span>`:''}</div></div>
       <button class="fav ${isFav?'on':''}" data-fav="${p.id}" type="button" aria-label="Favourite" title="Favourite">${isFav?'★':'☆'}</button>
     </summary>
     <div class="content">${body}</div>
@@ -1446,6 +1578,7 @@ function bindResultActions(){
     try{await navigator.clipboard.writeText(itemText(p)); showToast('Copied for engineer');}
     catch{showToast('Copy is blocked in this browser');}
   }));
+  resultsEl.querySelectorAll('.share').forEach(btn=>btn.addEventListener('click',()=>shareItem(allItems.find(x=>x.id===btn.dataset.id))));
   resultsEl.querySelectorAll('.print').forEach(btn=>btn.addEventListener('click',()=>window.print()));
 }
 
@@ -1546,6 +1679,7 @@ function goHome(){
   resultsSection.hidden=true;
   renderFilters();
   renderHomePanels();
+  renderRecentSearches();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function browseView(view){
@@ -1564,14 +1698,20 @@ function browseView(view){
 searchEl.addEventListener('input',()=>{
   focusedItemId='';
   query=searchEl.value;
+  renderRecentSearches();
   if(query.trim()) showResultsView();
-  else if(activeCategory==='All') { goHome(); return; }
+  else if(activeCategory==='All') { goHome(); renderRecentSearches(true); return; }
   renderResults();
+});
+searchEl.addEventListener('focus',()=>renderRecentSearches(true));
+searchEl.addEventListener('blur',()=>setTimeout(()=>renderRecentSearches(false),140));
+searchEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && searchEl.value.trim()) recordRecentSearch(searchEl.value);
 });
 $('#clearSearch').addEventListener('click',()=>{
   searchEl.value=''; query=''; focusedItemId='';
   if(activeCategory==='All') goHome(); else renderResults();
-  searchEl.focus();
+  searchEl.focus(); renderRecentSearches(true);
 });
 $('#homeBtn').addEventListener('click',goHome);
 document.addEventListener('click',e=>{
@@ -1587,6 +1727,9 @@ function updateConnectionStatus(){
 }
 window.addEventListener('online',updateConnectionStatus);
 window.addEventListener('offline',updateConnectionStatus);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && keepAwakeEnabled && !wakeLockSentinel) requestWakeLock();
+});
 updateConnectionStatus();
 
 const savedTheme = localStorage.getItem('gentVigilonTheme');
@@ -1660,8 +1803,9 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   });
 }
 
-renderHomePanels(); renderQuick(); renderFilters(); renderResults(); updateThemeButton();
+renderHomePanels(); renderQuick(); renderFilters(); renderResults(); renderRecentSearches(); updateThemeButton();
 goHome();
+if(keepAwakeEnabled) requestWakeLock();
 </script>
 </body>
 </html>
