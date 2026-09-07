@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gent-vigilon-v5-2-parts-notes1';
+const CACHE_NAME = 'gent-vigilon-v5-3-search';
 const CORE = [
   './',
   './index.html',
@@ -15,13 +15,30 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if(req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const isPage = req.mode === 'navigate' || url.pathname.endsWith('/index.html');
+
+  if(isPage){
+    event.respondWith(
+      fetch(req).then(resp=>{
+        if(resp && resp.ok && sameOrigin){
+          const copy=resp.clone();
+          caches.open(CACHE_NAME).then(cache=>cache.put('./index.html',copy));
+        }
+        return resp;
+      }).catch(()=>caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(req).then(cached => cached || fetch(req).then(resp => {
-      if(resp && resp.ok && new URL(req.url).origin === self.location.origin){
+      if(resp && resp.ok && sameOrigin){
         const copy = resp.clone();
         caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
       }
       return resp;
-    }).catch(()=>caches.match('./index.html')))
+    }))
   );
 });

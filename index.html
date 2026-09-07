@@ -38,6 +38,7 @@
     .search:focus{border-color:var(--brand)}
     .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:1.1rem;color:var(--muted)}
     .clear-search{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:8px;cursor:pointer;font-size:1.1rem}
+    .search-hint{margin:7px 3px 0;color:var(--muted);font-size:.78rem;line-height:1.35}
     .source-note,.warning{border-radius:14px;padding:12px 14px;margin-top:14px;font-size:.9rem}
     .source-note{background:var(--soft);border-left:4px solid var(--brand)}
     .warning{background:var(--warn);border-left:4px solid var(--warn-border)}
@@ -195,7 +196,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <h1>Gent Vigilon Engineer Reference</h1>
-        <p>Offline quick-reference • Version 5.2</p>
+        <p>Offline quick-reference • Version 5.3</p>
       </div>
       <div class="top-actions">
         <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
@@ -215,6 +216,7 @@
       <input id="search" class="search" type="search" autocomplete="off" placeholder="Example: optical heat sounder, S4-770-S, TX fault, SAFE..." />
       <button id="clearSearch" class="clear-search" aria-label="Clear search" title="Clear search">×</button>
     </div>
+    <div class="search-hint">Search is not case-sensitive. Common terms are matched too — for example <b>assign</b> will also find allocate/addressing, and part codes can be typed with or without hyphens.</div>
     <div class="source-note"><strong>Source controlled:</strong> Procedures come from your <em>Gent Vigilon Help Sheet</em>; fault guidance comes from <em>Gent Generic Commissioning Instructions</em>, Appendix B; parts and product images come from the supplied <em>Gent Consultants Specification Guide</em>. No AI diagnosis or outside technical guidance is added.</div>
   </section>
 
@@ -243,7 +245,7 @@
   <div class="filters" id="filters"></div>
   <main class="results" id="results"></main>
 
-  <div class="footer">Gent Vigilon Engineer Reference • Version 5.2 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
+  <div class="footer">Gent Vigilon Engineer Reference • Version 5.3 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
@@ -529,8 +531,63 @@ function escapeHtml(s=''){
   return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
+const SEARCH_SYNONYM_GROUPS = [
+  ['assign','assigned','assignment','allocate','allocated','allocation','reallocate','reallocated','reallocation','address','addressing'],
+  ['isolate','isolated','isolation','disable','disabled','disablement'],
+  ['restore','restored','enable','enabled','reenable','re-enabled'],
+  ['device','sensor','detector','head','outstation'],
+  ['find','locate','identify'],
+  ['replace','exchange','change'],
+  ['tx','transmission','communication','communications','comms'],
+  ['oc','open','split','open circuit'],
+  ['sc','short','short circuit'],
+  ['mcp','callpoint','call point','manual call point','breakglass','break glass'],
+  ['psu','power supply'],
+  ['nvm','backup','flash','sd'],
+  ['vad','visual','beacon','strobe'],
+  ['sounder','audible','alarm sounder'],
+  ['input','ip','i p'],
+  ['output','op','o p']
+];
+
+function normaliseSearchText(value=''){
+  return String(value)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/&/g,' and ')
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim()
+    .replace(/\s+/g,' ');
+}
+
+function searchAlternatives(term){
+  const t = normaliseSearchText(term);
+  const alts = new Set([t]);
+  SEARCH_SYNONYM_GROUPS.forEach(group=>{
+    const normGroup = group.map(normaliseSearchText);
+    if(normGroup.some(g=>g===t || (t.length>=4 && g.startsWith(t)) || (g.length>=4 && t.startsWith(g)))){
+      normGroup.forEach(g=>alts.add(g));
+    }
+  });
+  return [...alts].filter(Boolean);
+}
+
 function searchable(p){
-  return [p.title,p.cat,p.code||'',p.name||'',p.partGroup||'',p.description||'',(p.aliases||[]).join(' '),(p.features||[]).join(' '),(p.compatible||[]).join(' '),p.partNote||'',p.associated||'',p.meaning||'',p.action||'',p.clearType||'',(p.tags||[]).join(' '),(p.path||[]).join(' '),(p.list||[]).join(' '),p.note||'',JSON.stringify(p.nodes||{}),JSON.stringify(p.reference||{})].join(' ').toLowerCase();
+  const base = normaliseSearchText([p.title,p.cat,p.code||'',p.name||'',p.partGroup||'',p.description||'',(p.aliases||[]).join(' '),(p.features||[]).join(' '),(p.compatible||[]).join(' '),p.partNote||'',p.associated||'',p.meaning||'',p.action||'',p.clearType||'',(p.tags||[]).join(' '),(p.path||[]).join(' '),(p.list||[]).join(' '),p.note||'',JSON.stringify(p.nodes||{}),JSON.stringify(p.reference||{})].join(' '));
+  // Also include a compact copy so part codes such as S4770S match S4-770-S.
+  return base + ' ' + base.replace(/\s+/g,'');
+}
+
+function matchesSearch(p, rawQuery){
+  const q = normaliseSearchText(rawQuery);
+  if(!q) return true;
+  const text = searchable(p);
+  const compactText = text.replace(/\s+/g,'');
+  return q.split(' ').filter(Boolean).every(term=>{
+    const alts = searchAlternatives(term);
+    return alts.some(alt=>text.includes(alt) || compactText.includes(alt.replace(/\s+/g,'')));
+  });
 }
 
 function highlight(s){
@@ -679,7 +736,7 @@ function openNotesModal(){
   showModal('My Notes', `<div class="notes-warning"><strong>MY NOTES – NOT FROM GENT DOCUMENTATION.</strong><br>Notes are saved only on this device. They are not uploaded to GitHub.</div><div class="modal-actions"><button class="primary" type="button" data-new-note>Add general note</button><button type="button" data-export-notes>Export backup</button><button type="button" data-import-notes>Import backup</button></div>${list}<input id="notesImportFile" type="file" accept="application/json,.json" hidden>`);
 }
 function exportNotes(){
-  const payload={app:'Gent Vigilon Engineer Reference',version:'5.2',exportedAt:new Date().toISOString(),notes:personalNotes};
+  const payload={app:'Gent Vigilon Engineer Reference',version:'5.3',exportedAt:new Date().toISOString(),notes:personalNotes};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='gent-vigilon-notes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -897,14 +954,13 @@ function renderCard(p){
 }
 
 function renderResults(){
-  const q = query.trim().toLowerCase();
   const filtered = allItems.filter(p=>{
     const catOk = activeCategory==='All' || (activeCategory==='Favourites' ? favs.has(p.id) : p.cat===activeCategory);
-    const qOk = !q || q.split(/\s+/).every(term=>searchable(p).includes(term));
+    const qOk = matchesSearch(p, query);
     return catOk && qOk;
   });
   countText.textContent = `${filtered.length} of ${allItems.length}`;
-  resultsEl.innerHTML = filtered.length ? filtered.map(renderCard).join('') : `<div class="empty"><strong>No match found.</strong><br>Try a shorter search such as “S4-710”, “optical heat”, “sounder”, “MCP”, “tx”, “loop split”, “SAFE” or “NVM”.</div>`;
+  resultsEl.innerHTML = filtered.length ? filtered.map(renderCard).join('') : `<div class="empty"><strong>No match found.</strong><br>Search is not case-sensitive. Try terms such as “assign”, “S4-710”, “optical heat”, “sounder”, “MCP”, “tx”, “loop split”, “SAFE” or “NVM”.</div>`;
 
   resultsEl.querySelectorAll('[data-fav]').forEach(btn=>btn.addEventListener('click',e=>{
     e.preventDefault(); e.stopPropagation();
