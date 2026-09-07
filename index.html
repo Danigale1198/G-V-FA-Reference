@@ -268,7 +268,23 @@
     .compare-card ul{padding-left:18px;margin:8px 0}
     .compare-card li{margin:4px 0}
     .version-status{font-weight:650}
+    .settings-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+    .settings-actions button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:10px 11px;cursor:pointer;text-align:left;font-weight:700}
+    .settings-actions button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .settings-actions small{display:block;font-weight:500;opacity:.78;margin-top:2px;line-height:1.3}
+    .alias-list{display:grid;gap:9px;margin-top:12px}
+    .alias-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 11px}
+    .alias-row strong{display:block}
+    .alias-row small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+    .alias-row-actions{display:flex;gap:6px;flex:0 0 auto}
+    .alias-row-actions button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.78rem}
+    .alias-row-actions .danger{border-color:#c83a48;color:#b20b1d}
+    .alias-form label{display:block;font-size:.78rem;font-weight:750;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.04em}
+    .alias-form input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:10px 11px;outline:none}
+    .alias-form input:focus{border-color:var(--brand)}
     @media(max-width:620px){
+      .settings-actions{grid-template-columns:1fr}
+
       .update-banner{margin-left:0;margin-right:0;align-items:flex-start}
       .compare-grid{grid-template-columns:1fr}
       .compare-bar{bottom:10px}
@@ -281,12 +297,12 @@
     <div class="topbar-inner">
       <div class="brand">
         <h1>Gent Vigilon Engineer Reference</h1>
-        <p>Offline quick-reference • Version 6.1</p>
+        <p>Offline quick-reference • Version 6.2</p>
       </div>
       <div class="top-actions">
         <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
         <button class="home-btn" id="homeBtn" type="button">Home</button>
-        <button class="info-btn" id="referenceBtn" type="button">Reference info</button>
+        <button class="info-btn" id="referenceBtn" type="button">Settings / info</button>
         <button class="theme-btn" id="themeBtn" type="button">Dark mode</button>
         <button id="partsBtn" type="button" hidden>Parts</button>
         <button id="notesBtn" type="button" hidden>My Notes</button>
@@ -347,7 +363,7 @@
     <main class="results" id="results"></main>
   </section>
 
-  <div class="footer">Gent Vigilon Engineer Reference • Version 6.1 • <span class="version-status" id="connectionStatus">Offline ready</span> • Verify site-specific programming before making changes.</div>
+  <div class="footer">Gent Vigilon Engineer Reference • Version 6.2 • <span class="version-status" id="connectionStatus">Offline ready</span> • Verify site-specific programming before making changes.</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="compare-bar" id="compareBar" hidden><div><strong id="compareBarTitle">Compare parts</strong><small id="compareBarText">Select another part to compare.</small></div><button id="cancelCompareBtn" type="button">Cancel</button></div>
@@ -626,6 +642,12 @@ let personalNotes = (()=>{
     return Array.isArray(data) ? data : [];
   }catch{return [];}
 })();
+let customAliases = (()=>{
+  try{
+    const data = JSON.parse(localStorage.getItem('gentVigilonCustomAliasesV1') || '[]');
+    return Array.isArray(data) ? data.filter(a=>a&&typeof a.from==='string'&&Array.isArray(a.targets)) : [];
+  }catch{return [];}
+})();
 
 const $ = s => document.querySelector(s);
 const resultsEl = $('#results');
@@ -704,7 +726,29 @@ function searchAlternatives(term){
       normGroup.forEach(g=>alts.add(g));
     }
   });
+  customAliases.forEach(alias=>{
+    const from=normaliseSearchText(alias.from||'');
+    if(!from) return;
+    if(from===t || (t.length>=4 && from.startsWith(t)) || (from.length>=4 && t.startsWith(from))){
+      (alias.targets||[]).forEach(target=>{const n=normaliseSearchText(target);if(n)alts.add(n);});
+    }
+  });
   return [...alts].filter(Boolean);
+}
+
+function queryVariants(rawQuery){
+  const base=normaliseSearchText(rawQuery);
+  if(!base) return [''];
+  const variants=new Set([base]);
+  customAliases.forEach(alias=>{
+    const from=normaliseSearchText(alias.from||'');
+    if(!from || !base.includes(from)) return;
+    (alias.targets||[]).forEach(target=>{
+      const to=normaliseSearchText(target);
+      if(to) variants.add(base.split(from).join(to));
+    });
+  });
+  return [...variants];
 }
 
 function searchable(p){
@@ -714,14 +758,14 @@ function searchable(p){
 }
 
 function matchesSearch(p, rawQuery){
-  const q = normaliseSearchText(rawQuery);
-  if(!q) return true;
+  const variants=queryVariants(rawQuery);
+  if(!normaliseSearchText(rawQuery)) return true;
   const text = searchable(p);
   const compactText = text.replace(/\s+/g,'');
-  return q.split(' ').filter(Boolean).every(term=>{
+  return variants.some(q=>q.split(' ').filter(Boolean).every(term=>{
     const alts = searchAlternatives(term);
     return alts.some(alt=>text.includes(alt) || compactText.includes(alt.replace(/\s+/g,'')));
-  });
+  }));
 }
 
 
@@ -751,6 +795,7 @@ function searchVocabulary(){
     if(p.code) set.add(normaliseSearchText(p.code).replace(/\s+/g,''));
   });
   SEARCH_SYNONYM_GROUPS.flat().forEach(x=>normaliseSearchText(x).split(' ').forEach(w=>{if(w.length>=3)set.add(w);}));
+  customAliases.forEach(a=>[a.from,...(a.targets||[])].forEach(x=>normaliseSearchText(x).split(' ').forEach(w=>{if(w.length>=3)set.add(w);})));
   searchVocabularyCache=[...set];
   return searchVocabularyCache;
 }
@@ -952,7 +997,7 @@ function openNotesModal(){
   showModal('My Notes', `<div class="notes-warning"><strong>MY NOTES – NOT FROM GENT DOCUMENTATION.</strong><br>Notes are saved only on this device. They are not uploaded to GitHub.</div><div class="modal-actions"><button class="primary" type="button" data-new-note>Add general note</button><button type="button" data-export-notes>Export backup</button><button type="button" data-import-notes>Import backup</button></div>${list}<input id="notesImportFile" type="file" accept="application/json,.json" hidden>`);
 }
 function exportNotes(){
-  const payload={app:'Gent Vigilon Engineer Reference',version:'6.1',exportedAt:new Date().toISOString(),notes:personalNotes};
+  const payload={app:'Gent Vigilon Engineer Reference',version:'6.2',exportedAt:new Date().toISOString(),notes:personalNotes};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='gent-vigilon-notes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -974,6 +1019,79 @@ function importNotesFile(file){
   reader.readAsText(file);
 }
 
+
+function newAliasId(){
+  return 'alias-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+}
+function saveCustomAliases(){
+  localStorage.setItem('gentVigilonCustomAliasesV1', JSON.stringify(customAliases));
+  searchVocabularyCache=null;
+}
+function openAliasesModal(){
+  const rows=customAliases.length ? `<div class="alias-list">${customAliases.map(a=>`<div class="alias-row"><div><strong>${escapeHtml(a.from)}</strong><small>Also search for: ${escapeHtml((a.targets||[]).join(', '))}</small></div><div class="alias-row-actions"><button type="button" data-edit-alias="${escapeHtml(a.id)}">Edit</button><button class="danger" type="button" data-delete-alias="${escapeHtml(a.id)}">Delete</button></div></div>`).join('')}</div>` : '<div class="empty">No custom aliases yet. The built-in aliases still work.</div>';
+  showModal('Search aliases', `<div class="fact"><strong>Teach the search your wording</strong><br>Add words or short phrases you use on site and tell the app what Gent wording to search for. Built-in aliases such as assign → allocation/addressing and isolate → disable remain active.</div><div class="modal-actions"><button class="primary" type="button" data-new-alias>Add alias</button><button type="button" data-open-settings>Back to settings</button></div>${rows}`);
+}
+function openAliasEditor(aliasId=''){
+  const a=aliasId ? customAliases.find(x=>x.id===aliasId) : null;
+  showModal(a?'Edit search alias':'Add search alias', `<form class="alias-form" id="aliasForm"><input type="hidden" id="aliasEditId" value="${escapeHtml(a?.id||'')}"><label for="aliasFrom">When I type</label><input id="aliasFrom" maxlength="60" required value="${escapeHtml(a?.from||'')}" placeholder="Example: head missing"><label for="aliasTargets">Also search for</label><input id="aliasTargets" maxlength="180" required value="${escapeHtml((a?.targets||[]).join(', '))}" placeholder="Example: lost device, device missing"><p>Separate several alternatives with commas.</p><div class="modal-actions"><button class="primary" type="submit">Save alias</button><button type="button" data-manage-aliases>Cancel</button></div></form>`);
+  setTimeout(()=>$('#aliasFrom')?.focus(),0);
+}
+function saveAliasFromModal(){
+  const id=$('#aliasEditId')?.value||'';
+  const from=($('#aliasFrom')?.value||'').trim();
+  const targets=($('#aliasTargets')?.value||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,8);
+  if(!from || !targets.length){showToast('Add the wording and at least one search alternative');return;}
+  const duplicate=customAliases.find(a=>normaliseSearchText(a.from)===normaliseSearchText(from) && a.id!==id);
+  if(duplicate){showToast('You already have an alias for that wording');return;}
+  if(id){
+    const a=customAliases.find(x=>x.id===id); if(a){a.from=from;a.targets=targets;}
+  }else customAliases.push({id:newAliasId(),from,targets});
+  saveCustomAliases(); openAliasesModal(); renderResults(); showToast('Search alias saved');
+}
+function deleteAlias(id){
+  const a=customAliases.find(x=>x.id===id); if(!a) return;
+  if(!confirm(`Delete this search alias?\n\n${a.from} → ${(a.targets||[]).join(', ')}`)) return;
+  customAliases=customAliases.filter(x=>x.id!==id); saveCustomAliases(); openAliasesModal(); renderResults(); showToast('Search alias deleted');
+}
+function fullBackupPayload(){
+  return {
+    app:'Gent Vigilon Engineer Reference',backupType:'full-app',version:'6.2',exportedAt:new Date().toISOString(),
+    notes:personalNotes,
+    favourites:[...favs],
+    recent:recentIds,
+    quickTasks:quickTaskIds,
+    customAliases:customAliases,
+    theme:document.documentElement.dataset.theme==='dark'?'dark':'light'
+  };
+}
+function exportFullBackup(){
+  const blob=new Blob([JSON.stringify(fullBackupPayload(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='gent-vigilon-full-backup-v6-2.json'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000); showToast('Full app backup exported');
+}
+function importFullBackupFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || data.backupType!=='full-app') throw new Error('Not a full backup');
+      if(!Array.isArray(data.notes)||!Array.isArray(data.favourites)||!Array.isArray(data.quickTasks)||!Array.isArray(data.customAliases)) throw new Error('Incomplete backup');
+      if(!confirm('Restore this full app backup?\n\nThis will replace the notes, favourites, recent items, Quick Tasks, search aliases and theme currently stored on this device.')) return;
+      const now=new Date().toISOString();
+      personalNotes=data.notes.filter(n=>n&&typeof n.text==='string').map(n=>({id:n.id||newNoteId(),itemId:allItems.some(x=>x.id===n.itemId)?n.itemId:'',title:String(n.title||''),text:String(n.text||''),createdAt:n.createdAt||now,updatedAt:n.updatedAt||now}));
+      favs.clear(); data.favourites.filter(id=>allItems.some(x=>x.id===id)).forEach(id=>favs.add(id));
+      recentIds=(Array.isArray(data.recent)?data.recent:[]).filter(id=>allItems.some(x=>x.id===id)).slice(0,8);
+      quickTaskIds=data.quickTasks.filter(id=>allItems.some(x=>x.id===id)).slice(0,10);
+      customAliases=data.customAliases.filter(a=>a&&typeof a.from==='string'&&Array.isArray(a.targets)).map(a=>({id:a.id||newAliasId(),from:String(a.from).trim(),targets:a.targets.map(String).map(x=>x.trim()).filter(Boolean).slice(0,8)})).filter(a=>a.from&&a.targets.length);
+      saveNotes(); localStorage.setItem('gentVigilonFavs',JSON.stringify([...favs])); localStorage.setItem('gentVigilonRecent',JSON.stringify(recentIds)); saveQuickTasks(); saveCustomAliases();
+      const theme=data.theme==='dark'?'dark':'light'; localStorage.setItem('gentVigilonTheme',theme); document.documentElement.dataset.theme=theme==='dark'?'dark':''; updateThemeButton();
+      closeModal(); renderHomePanels(); renderFilters(); renderResults(); showToast('Full app backup restored');
+    }catch{showToast('That file is not a valid full app backup');}
+  };
+  reader.readAsText(file);
+}
 
 function saveQuickTasks(){
   localStorage.setItem('gentVigilonQuickPinsV1', JSON.stringify(quickTaskIds));
@@ -1067,15 +1185,26 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-new-note]')){ openNoteEditor(); return; }
   if(e.target.closest('[data-export-notes]')){ exportNotes(); return; }
   if(e.target.closest('[data-import-notes]')){ $('#notesImportFile')?.click(); return; }
+  if(e.target.closest('[data-manage-aliases]')){ openAliasesModal(); return; }
+  if(e.target.closest('[data-open-settings]')){ openReferenceModal(); return; }
+  if(e.target.closest('[data-new-alias]')){ openAliasEditor(); return; }
+  const editAliasBtn=e.target.closest('[data-edit-alias]');
+  if(editAliasBtn){ openAliasEditor(editAliasBtn.dataset.editAlias); return; }
+  const delAliasBtn=e.target.closest('[data-delete-alias]');
+  if(delAliasBtn){ deleteAlias(delAliasBtn.dataset.deleteAlias); return; }
+  if(e.target.closest('[data-export-full-backup]')){ exportFullBackup(); return; }
+  if(e.target.closest('[data-import-full-backup]')){ $('#fullBackupImportFile')?.click(); return; }
   const linkedBtn=e.target.closest('[data-open-note-item]');
   if(linkedBtn){ closeModal(); openItemById(linkedBtn.dataset.openNoteItem); return; }
 });
 
 document.addEventListener('submit',e=>{
-  if(e.target?.id==='noteForm'){ e.preventDefault(); saveNoteFromModal(); }
+  if(e.target?.id==='noteForm'){ e.preventDefault(); saveNoteFromModal(); return; }
+  if(e.target?.id==='aliasForm'){ e.preventDefault(); saveAliasFromModal(); }
 });
 document.addEventListener('change',e=>{
-  if(e.target?.id==='notesImportFile'){ importNotesFile(e.target.files?.[0]); }
+  if(e.target?.id==='notesImportFile'){ importNotesFile(e.target.files?.[0]); return; }
+  if(e.target?.id==='fullBackupImportFile'){ importFullBackupFile(e.target.files?.[0]); }
 });
 
 function renderQuick(){
@@ -1192,8 +1321,9 @@ function openSourceModal(id){
   showModal('Source', `<div class="fact"><strong>${escapeHtml(si.doc)}</strong><br>${escapeHtml(si.detail)}</div><p>This item is based only on the supplied source shown above. The source PDFs are intentionally not included in this public GitHub Pages build. Keep your original PDFs locally for verification.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
 }
 function openReferenceModal(){
-  showModal('Reference information', `<div class="fact"><strong>App content basis</strong><br>Gent Vigilon Help Sheet + Gent Generic Commissioning Instructions + Gent Consultants Specification Guide.</div><div class="fact"><strong>Gent manual</strong><br>Issue 9 • 05/17 • Generic Vigilon Plus & Compact Plus commissioning instructions.</div><div class="fact"><strong>Manual scope</strong><br>The manual states it covers Vigilon Plus 4/6-loop panels, Vigilon Compact Plus panels and Vigilon Plus Network Nodes with MCC/MCB software version 4.54 or higher.</div><p>No AI-generated diagnosis or outside technical guidance is included in the app. Fault meanings and initial actions are taken from Appendix B; procedures and guided flows are taken from the supplied help sheet; the parts reference and product images are taken from the supplied Gent Consultants Specification Guide.</p><p><strong>Public web build:</strong> the source PDFs are not included. Keep your original copies locally.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
+  showModal('Settings & reference', `<div class="settings-actions"><button class="primary" type="button" data-manage-aliases>Search aliases<small>Teach search the wording you use.</small></button><button type="button" data-export-full-backup>Export full app backup<small>Notes, favourites, Quick Tasks, aliases and preferences.</small></button><button type="button" data-import-full-backup>Restore full app backup<small>Move your setup to another phone/computer or restore it later.</small></button><button type="button" data-modal-close>Close<small>Return to the reference app.</small></button></div><input id="fullBackupImportFile" type="file" accept="application/json,.json" hidden><div class="fact"><strong>App version</strong><br>Version 6.2 • Offline/PWA build.</div><div class="fact"><strong>App content basis</strong><br>Gent Vigilon Help Sheet + Gent Generic Commissioning Instructions + Gent Consultants Specification Guide.</div><div class="fact"><strong>Gent manual</strong><br>Issue 9 • 05/17 • Generic Vigilon Plus & Compact Plus commissioning instructions.</div><div class="fact"><strong>Manual scope</strong><br>The manual states it covers Vigilon Plus 4/6-loop panels, Vigilon Compact Plus panels and Vigilon Plus Network Nodes with MCC/MCB software version 4.54 or higher.</div><p>No AI-generated diagnosis or outside technical guidance is included in the app. Fault meanings and initial actions are taken from Appendix B; procedures and guided flows are taken from the supplied help sheet; the parts reference and product images are taken from the supplied Gent Consultants Specification Guide.</p><p><strong>Public web build:</strong> the source PDFs are not included. Keep your original copies locally.</p>`);
 }
+
 
 function renderCard(p){
   const isFav = favs.has(p.id);
@@ -1250,12 +1380,13 @@ function renderCard(p){
 }
 
 function noteMatchesSearch(n, rawQuery){
-  const q = normaliseSearchText(rawQuery);
-  if(!q) return true;
+  const variants=queryVariants(rawQuery);
+  if(!normaliseSearchText(rawQuery)) return true;
   const linked = n.itemId ? allItems.find(x=>x.id===n.itemId)?.title || '' : '';
   const text = normaliseSearchText([n.title||'',n.text||'',linked].join(' '));
-  return q.split(' ').filter(Boolean).every(term=>searchAlternatives(term).some(alt=>text.includes(alt)));
+  return variants.some(q=>q.split(' ').filter(Boolean).every(term=>searchAlternatives(term).some(alt=>text.includes(alt))));
 }
+
 
 function itemMatchesActiveView(p){
   if(focusedItemId) return p.id===focusedItemId;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gent-vigilon-v6-1-usability';
+const CACHE_NAME = 'gent-vigilon-v6-2-alias-backup';
 const CORE = [
   './',
   './index.html',
