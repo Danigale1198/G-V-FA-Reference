@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#b30d22" />
+  <meta name="description" content="Offline Gent Vigilon engineer quick-reference built from the supplied help sheet and Gent commissioning manual." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Gent Vigilon Engineer Reference</title>
+  <style>
+    :root{
+      --bg:#f4f6f8; --panel:#ffffff; --text:#17191c; --muted:#68707a;
+      --line:#dfe4e8; --brand:#b30d22; --brand-dark:#7d0716; --soft:#f8eaed;
+      --warn:#fff4cc; --warn-border:#e0ad12; --ok:#e8f5ec; --shadow:0 8px 24px rgba(20,25,31,.08);
+      --radius:18px;
+    }
+    [data-theme="dark"]{
+      --bg:#111417; --panel:#1b2025; --text:#f3f5f7; --muted:#aeb6bf;
+      --line:#30373e; --brand:#ea334f; --brand-dark:#b30d22; --soft:#34151d;
+      --warn:#3b3214; --warn-border:#b68e16; --ok:#173522; --shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+    button,input{font:inherit}
+    .app{max-width:1120px;margin:0 auto;padding:0 16px 80px}
+    .topbar{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:#fff;margin:0 -16px 18px;padding:18px 16px 14px;box-shadow:0 4px 18px rgba(0,0,0,.16)}
+    .topbar-inner{max-width:1120px;margin:auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .brand h1{font-size:1.28rem;margin:0;letter-spacing:.01em}
+    .brand p{margin:2px 0 0;font-size:.84rem;opacity:.86}
+    .theme-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;white-space:nowrap}
+    .hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+    .hero h2{margin:0 0 6px;font-size:1.25rem}
+    .hero p{margin:0;color:var(--muted)}
+    .search-wrap{position:relative;margin-top:15px}
+    .search{width:100%;border:2px solid var(--line);background:var(--bg);color:var(--text);border-radius:14px;padding:14px 46px 14px 44px;outline:none}
+    .search:focus{border-color:var(--brand)}
+    .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:1.1rem;color:var(--muted)}
+    .clear-search{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:8px;cursor:pointer;font-size:1.1rem}
+    .source-note,.warning{border-radius:14px;padding:12px 14px;margin-top:14px;font-size:.9rem}
+    .source-note{background:var(--soft);border-left:4px solid var(--brand)}
+    .warning{background:var(--warn);border-left:4px solid var(--warn-border)}
+    .section-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:22px 2px 10px}
+    .section-title h2{font-size:1.05rem;margin:0}
+    .section-title span{color:var(--muted);font-size:.84rem}
+    .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .quick{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:15px;padding:13px 12px;text-align:left;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.035)}
+    .quick:hover{border-color:var(--brand)}
+    .quick strong{display:block;font-size:.92rem}
+    .quick small{display:block;color:var(--muted);margin-top:3px}
+    .quick.task{border-left:4px solid var(--brand)}
+    .home-panel[hidden]{display:none}
+    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .mini{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:14px;padding:11px 12px;text-align:left;cursor:pointer;min-width:0}
+    .mini:hover{border-color:var(--brand)}
+    .mini strong{display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mini small{display:block;color:var(--muted);font-size:.76rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+    .filter{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:8px 12px;cursor:pointer;white-space:nowrap;font-size:.88rem}
+    .filter.active{background:var(--brand);border-color:var(--brand);color:#fff}
+    .results{display:grid;gap:11px}
+    details.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.035);overflow:hidden}
+    details.card[open]{border-color:rgba(179,13,34,.35);box-shadow:var(--shadow)}
+    summary{list-style:none;cursor:pointer;padding:15px 15px 14px;display:flex;align-items:flex-start;gap:12px}
+    summary::-webkit-details-marker{display:none}
+    .badge{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--soft);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:.78rem}
+    .summary-text{min-width:0;flex:1}
+    .summary-text h3{margin:0;font-size:1rem}
+    .meta{margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
+    .fav{border:0;background:transparent;color:var(--muted);padding:5px;cursor:pointer;font-size:1.2rem;line-height:1}
+    .fav.on{color:#d59b00}
+    .content{border-top:1px solid var(--line);padding:14px 15px 16px}
+    .label{font-size:.76rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:750;margin:0 0 8px}
+    .path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px}
+    .step{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:6px 8px;font-weight:650;font-size:.88rem}
+    .arrow{color:var(--muted);font-weight:700}
+    .note{margin:10px 0 0;padding:10px 12px;border-radius:11px;background:var(--bg);font-size:.9rem}
+    .note.critical{background:var(--warn);border:1px solid var(--warn-border)}
+    .substeps{margin:7px 0 0;padding-left:19px}
+    .substeps li{margin:7px 0}
+    .card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .action{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:7px 10px;cursor:pointer;font-size:.82rem}
+    .action:hover{border-color:var(--brand)}
+    .empty{background:var(--panel);border:1px dashed var(--line);border-radius:16px;padding:24px;text-align:center;color:var(--muted)}
+    .footer{margin-top:24px;color:var(--muted);font-size:.78rem;text-align:center}
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(18px);background:#111;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:100;max-width:90vw;text-align:center}
+    .toast.show{opacity:.95;transform:translateX(-50%) translateY(0)}
+    mark{background:#ffe98c;color:#111;border-radius:3px;padding:0 2px}
+
+    .fault-grid{display:grid;gap:10px}
+    .faultbox{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+    .faultbox.actionbox{border-left:4px solid var(--brand)}
+    .faultbox .label{margin-bottom:5px}
+    .source-line{margin-top:12px;color:var(--muted);font-size:.78rem}
+
+    .flow-shell{margin-top:2px}
+    .flow-intro{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:10px;font-size:.9rem}
+    .flow-runner{margin-top:10px}
+    .flow-node{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--bg)}
+    .flow-node.question{border-left:4px solid var(--brand)}
+    .flow-node.advice{background:var(--warn);border-color:var(--warn-border)}
+    .flow-node.ok{background:var(--ok)}
+    .flow-node.jump{background:var(--soft)}
+    .flow-kicker{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;margin-bottom:6px}
+    .flow-text{font-weight:650;white-space:pre-line}
+    .flow-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .flow-btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:650}
+    .flow-btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .flow-btn.yes{background:var(--brand);border-color:var(--brand);color:#fff;min-width:84px}
+    .flow-btn.no{min-width:84px}
+    .flow-history{margin-top:10px;color:var(--muted);font-size:.78rem}
+    .ref-table-wrap{overflow-x:auto;margin-top:12px}
+    .ref-table{border-collapse:collapse;width:100%;font-size:.78rem;min-width:620px}
+    .ref-table th,.ref-table td{border:1px solid var(--line);padding:7px 8px;text-align:center}
+    .ref-table th{background:var(--bg)}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .info-btn,.install-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:12px;padding:9px 11px;cursor:pointer;white-space:nowrap}
+    .install-btn[hidden]{display:none}
+    .related{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+    .related-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+    .related-link{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 10px;cursor:pointer;font-size:.79rem}
+    .related-link:hover{border-color:var(--brand)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:200}
+    .modal-backdrop.show{display:flex}
+    .modal{width:min(620px,100%);max-height:86vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.35);padding:18px}
+    .modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+    .modal h2{font-size:1.1rem;margin:0}
+    .modal-close{border:0;background:var(--bg);color:var(--text);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:1.25rem}
+    .modal p{margin:8px 0;color:var(--muted)}
+    .modal .fact{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:9px 0;color:var(--text)}
+    .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .modal-actions a,.modal-actions button{display:inline-block;text-decoration:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 11px;cursor:pointer;font-size:.86rem}
+    .modal-actions .primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    @media(max-width:760px){
+      .quick-grid{grid-template-columns:repeat(2,1fr)}
+      .mini-grid{grid-template-columns:repeat(2,1fr)}
+      .app{padding-left:12px;padding-right:12px}
+      .topbar{margin-left:-12px;margin-right:-12px}
+      .brand p{display:none}
+      .info-btn,.install-btn,.theme-btn{padding:8px 9px;font-size:.8rem}
+    }
+    @media(max-width:420px){
+      .quick-grid{grid-template-columns:1fr 1fr}
+      .mini-grid{grid-template-columns:1fr}
+      .quick{padding:12px 10px}
+      summary{padding:13px 12px}
+      .content{padding:13px 12px 15px}
+    }
+    @media print{
+      .topbar,.hero,.quick-grid,.mini-grid,.filters,.section-title,.card-actions,.fav,.footer{display:none!important}
+      body{background:#fff;color:#000}
+      details.card{break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin-bottom:8px}
+      details.card .content{display:block!important}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1>Gent Vigilon Engineer Reference</h1>
+        <p>Offline quick-reference • Version 5</p>
+      </div>
+      <div class="top-actions">
+        <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
+        <button class="info-btn" id="referenceBtn" type="button">Reference</button>
+        <button class="theme-btn" id="themeBtn" type="button">Dark mode</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h2>What do you need to do?</h2>
+    <p>Search a panel fault/message or a procedure. Try “TX fault”, “lost device”, “earth”, “loop split”, “SAFE”, “NVM” or “sector”.</p>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="search" class="search" type="search" autocomplete="off" placeholder="Example: TX fault, lost device, loop split, SAFE, NVM..." />
+      <button id="clearSearch" class="clear-search" aria-label="Clear search" title="Clear search">×</button>
+    </div>
+    <div class="source-note"><strong>Source controlled:</strong> Procedures come from your attached <em>Gent Vigilon Help Sheet</em>. Fault meanings and initial actions come from <em>Gent Generic Commissioning Instructions</em>, Appendix B. No outside fault guidance is added.</div>
+  </section>
+
+  <div class="section-title"><h2>Quick tasks</h2><span>Common panel jobs</span></div>
+  <section class="quick-grid" id="quickTasksGrid"></section>
+
+  <section class="home-panel" id="homeFavPanel" hidden>
+    <div class="section-title"><h2>Favourites</h2><span>Your starred items</span></div>
+    <div class="mini-grid" id="homeFavGrid"></div>
+  </section>
+
+  <section class="home-panel" id="recentPanel" hidden>
+    <div class="section-title"><h2>Recently viewed</h2><span>Quickly jump back in</span></div>
+    <div class="mini-grid" id="recentGrid"></div>
+  </section>
+
+  <div class="section-title"><h2>All sections</h2><span>Tap a section</span></div>
+  <section class="quick-grid" id="quickGrid"></section>
+
+  <div class="section-title" id="proceduresHeading"><h2>Procedures</h2><span id="countText"></span></div>
+  <div class="filters" id="filters"></div>
+  <main class="results" id="results"></main>
+
+  <div class="footer">Gent Vigilon Engineer Reference • Version 5 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head"><h2 id="modalTitle">Reference</h2><button class="modal-close" id="modalClose" type="button" aria-label="Close">×</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const procedures = [
+  {id:'active-events',cat:'Diagnostics',title:'View Active Events',page:1,tags:['event log','active','fault','fire'],path:['Info','Display','Active','Select category','Enter']},
+  {id:'historic-fires',cat:'Diagnostics',title:'View Historic Fires',page:1,tags:['event log','history','histfire'],path:['Info','Events','HistFire','1 THRU 255','Enter']},
+  {id:'condition-codes',cat:'Diagnostics',title:'Check Sensor Exception / Condition Codes',page:1,tags:['exception','condition','sensor','drift','clean','replace'],path:['Info','Status','Device','Enter Address','Loop','Loop No','Enter'],note:'Condition codes range 0–3. Codes 4 & 5 represent chamber drift. A value of 3 means “Out of Limits” [Clean/Replace].'},
+  {id:'psu-readings',cat:'Diagnostics',title:'Check PSU Readings',page:1,tags:['power supply','psu','voltage'],path:['Test/Eng','Test','PSU']},
+  {id:'loop-map',cat:'Diagnostics',title:'View Loop Map (Cabling Order)',page:1,tags:['map','cabling','order','loop'],path:['Info','Display','Loop Map','Enter Loop No','Enter']},
+  {id:'device-status',cat:'Diagnostics',title:'Interrogate Device Status',page:1,tags:['status','device','lb1','lb2','end1','end2','anal','io'],path:['Info','Status','Device','Enter Address','Loop','Loop No','Enter'],note:'Status screen: LB1:C / LB2:C = loop breakers closed (healthy); Open = isolator tripped. End1:Hi / End2:Hi = healthy high-frequency communications; Lo or Marginal indicates a need to check for high resistance. I/O shows active interface channels. Anal shows active analogue sensor chambers.'},
+  {id:'device-labels',cat:'Diagnostics',title:'View Device Labels',page:1,tags:['label','location','device'],path:['Info','Display','Label','Device','Enter Address','Loop','Loop No','Enter']},
+  {id:'card-roles',cat:'Diagnostics',title:'Card Status & Roles',page:1,tags:['mcc','lpc','terminal','nvm','network','card 0','card 14','card 15'],list:[
+    'Card 0 (MCC): Main Control Card. Manages panel times, configurations, serial links, and networks.',
+    'Cards 1–6 (LPC): Loop Processor Cards. Controls communication and addressing on active loop circuits.',
+    'Card 13 (Terminal): Base terminal board handling clean contacts, clean inputs, and conventional sounder lines.',
+    'Card 14 (NVM): Non-Volatile Memory. Stores configuration checksum backups.',
+    'Card 15 (Network): Network Card linking panel nodes on copper or fiber networks.'
+  ]},
+  {id:'sector-links',cat:'Diagnostics',title:'Check Sector Links',page:1,tags:['sector link','status'],path:['Info','Status','SectLink','Enter Sector','Loop','Enter Loop','Enter']},
+  {id:'build-status',cat:'Diagnostics',title:'Check Command Build Status',page:1,tags:['build','command build','status'],path:['Info','Status','Build','Enter Build No','Enter']},
+  {id:'sector-status',cat:'Diagnostics',title:'Check Sector Status',page:1,tags:['sector','status'],path:['Info','Status','Sector','Enter Sector No','Enter']},
+
+  {id:'led-on',cat:'Find Devices',title:'Turn Device LED ON',page:2,tags:['find','led','output line 4'],path:['Test/Eng','PIN','Outputs','Device','Enter Address','Loop','Loop No','Line','4','ON','Enter']},
+  {id:'led-off',cat:'Find Devices',title:'Turn Device LED OFF',page:2,tags:['find','led','output line 4'],path:['Test/Eng','PIN','Outputs','Device','Enter Address','Loop','Loop No','Line','4','OFF','Enter']},
+  {id:'find-device',cat:'Find Devices',title:'Physically Find a Device',page:2,tags:['find dev','locate','pulse','pulsate','next','previous'],path:['Test/Eng','PIN','Loop','Find Dev','Start','Enter Device Address','Enter'],note:'Pulsates the local LED/sounder. Use [Next] / [Previous] keys to scan.'},
+
+  {id:'disable-sector',cat:'Disable / Enable',title:'Disable / Enable Sectors',page:2,tags:['isolate','sector','disablement'],path:['Control','Disable','Sector','1 THRU 32','Loop','1','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-aux',cat:'Disable / Enable',title:'Disable / Enable Aux Relays',page:2,tags:['aux relay','isolate','disablement'],path:['Control','Disable','Aux Rly','1 THRU 2','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-io',cat:'Disable / Enable',title:'Disable / Enable I/O Lines',page:2,tags:['io line','interface','isolate'],path:['Control','Disable','IO Line','1','Device','3','Loop','1','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-build',cat:'Disable / Enable',title:'Disable / Enable Builds',page:2,tags:['build','command build','isolate'],path:['Control','Disable','Build','1 THRU 255','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-master-alarm',cat:'Disable / Enable',title:'Disable / Enable Master Alarms',page:2,tags:['master alarms','malarm','isolate'],path:['Control','Disable','Malarms','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-comms',cat:'Disable / Enable',title:'Disable / Enable Loop Comms',page:2,tags:['loop comms','communication','isolate'],path:['Control','Disable','Comms','1','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-sensors',cat:'Disable / Enable',title:'Disable / Enable Sensors',page:2,tags:['sensor','isolate','disablement'],path:['Control','Disable','Sensors','1 THRU 207','Loop','1','Enter'],note:'Enable again using [Enable].'},
+  {id:'disable-mcps',cat:'Disable / Enable',title:'Disable / Enable MCPs',page:2,tags:['mcp','call point','isolate'],path:['Control','Disable','MCPs','1 THRU 207','Loop','1','Enter'],note:'Enable again using [Enable]. VERY RARE YOU NEED TO DO THIS.',critical:true},
+  {id:'clear-latching',cat:'Fault Clearing',title:'Clear Latching Faults (Allocation / Slave Lost)',page:2,tags:['clear fault','latching','allocation','slave lost'],path:['Test/Eng','PIN','Loop','Allocate','Loop No','Enter'],note:'The help sheet states that loop re-allocation must be run for these latching faults.'},
+  {id:'clear-clearable',cat:'Fault Clearing',title:'Clear Clearable Faults',page:2,tags:['flash corrupt','checksum','nvm mismatch','clear fault'],path:['Test/Eng','Config','Clear','Fault','Enter','Scroll to target','Clear']},
+
+  {id:'unsafe',cat:'SAFE Addressing',title:'Convert SAFE Address to Soft (Un-SAFE)',page:3,tags:['safe','soft address','unsafe','addressing'],path:['Set Up','PIN','SetUp','Device','Enter Address','Loop','Loop No','Safe','0','Enter']},
+  {id:'resafe',cat:'SAFE Addressing',title:'Re-SAFE / Lock Address',page:3,tags:['safe','lock address','addressing'],path:['Set Up','PIN','SetUp','Device','Enter Soft Address','Loop','Loop No','Safe','Enter Target Address','Enter']},
+  {id:'stop-loop',cat:'Loop Management',title:'Stop Loop',page:3,tags:['stop','loop card'],path:['Test/Eng','PIN','Loop','Stop','1','Enter']},
+  {id:'allocate-loop',cat:'Loop Management',title:'Re-Allocate Loop',page:3,tags:['allocate','reallocate','loop card'],path:['Test/Eng','PIN','Loop','Allocate','1','Enter']},
+  {id:'stop-loop-old',cat:'Loop Management',title:'Stop Loop on Older Vigilon Panels',page:3,tags:['older panel','stop loop','card reset'],path:['Test/Eng','Card','Reset','1','Enter twice in quick succession']},
+  {id:'add-remove-devices',cat:'Loop Management',title:'Add / Remove Devices from an Active Loop',page:3,tags:['add device','remove device','modify wiring','soft address'],list:[
+    'Un-SAFE old device: [Set Up] → PIN → [SetUp] → [Device] → Enter Address → [Safe] → 0 → [Enter].',
+    'Stop loop: [Test/Eng] → PIN → [Loop] → [Stop] → Enter Loop No → [Enter].',
+    'Now physically modify the wiring.',
+    'Start & allocate: [Test/Eng] → [Loop] → [Allocate] → Enter Loop No → [Enter]. The help sheet notes this auto-assigns the lowest vacant soft address.',
+    'Lock SAFE address: [Set Up] → PIN → [SetUp] → [Device] → Enter Soft Address → [Safe] → Enter Target Address → [Enter].'
+  ]},
+  {id:'replace-safe',cat:'Device Replacement',title:'Like-for-Like Sensor Replacement — SAFE Device',page:3,tags:['replace sensor','safe device','head replacement'],list:[
+    'Un-safe original address (set to 0).',
+    'Stop loop.',
+    'Swap physical head.',
+    'Allocate loop.',
+    'Re-safe original address back onto new head.'
+  ]},
+  {id:'replace-soft',cat:'Device Replacement',title:'Like-for-Like Sensor Replacement — Non-SAFE Device',page:3,tags:['replace sensor','soft device','head replacement'],list:[
+    'Stop loop.',
+    'Swap physical head.',
+    'Allocate loop.',
+    'Device automatically takes the soft address; no SAFE mapping required.'
+  ]},
+  {id:'loop-repair',cat:'Loop Management',title:'Loop Repair',page:3,tags:['repair','open circuit','loop'],path:['Menu On/Off','Test/Eng','Loop','Repair','Loop','Enter Loop No','Enter']},
+  {id:'buzzer',cat:'Panel Setup',title:'Disable / Enable Panel Buzzer',page:3,tags:['buzzer','sound','panel'],path:['Test/Eng','Config','Buzzer','Enter Buzzer type','Off/On','Enter']},
+  {id:'clock',cat:'Panel Setup',title:'Set System Clock',page:3,tags:['clock','time','date'],path:['Set Up','SetClock','Enter Date and Time','Enter'],note:'Format: HH:MM DD/MM/YY.'},
+  {id:'device-label',cat:'Panel Setup',title:'Modify Device Label (32 Character Limit)',page:3,tags:['label','location','32 char','nvm'],path:['Menu On/Off','Set Up','Usercode','Set Up','Modify','Label','Device','Enter Device','Loop','Enter Loop','Enter','Type Custom Location Label','Enter'],note:'BACK UP TO NVM UPON COMPLETION.',critical:true},
+  {id:'long-labels',cat:'Panel Setup',title:'Enable Long Labels (64 Character Limit, Tokenized)',page:3,tags:['label','64 char','long labels'],path:['Menu On/Off','Test/Eng','Usercode','Config','Label','On','Enter']},
+
+  {id:'nvm-unprotect',cat:'Backup / Restore',title:'Software Unprotect the NVM',page:4,tags:['nvm','protect','unprotect','backup'],path:['Set Up','PIN','Protect','NVM Card','Disable','Enter']},
+  {id:'nvm-backup',cat:'Backup / Restore',title:'Back Up ALL Cards (0–15) to NVM',page:4,tags:['nvm','backup','cards','checksum 14'],path:['Set Up','PIN','SetUp','Backup/Restore','0 THRU 15','NVM Card','Enter'],note:'Wait for the Checksum 14 message before proceeding.',critical:true},
+  {id:'nvm-protect',cat:'Backup / Restore',title:'Software Protect the NVM',page:4,tags:['nvm','protect','backup'],path:['Set Up','PIN','Protect','NVM Card','Enable','Enter']},
+  {id:'sd-backup',cat:'Backup / Restore',title:'Back Up ALL Site Configurations to SD Card',page:4,tags:['sd card','backup','configuration'],path:['SetUp','Backup','0 THRU 15','SD Card','Enter']},
+  {id:'sd-restore',cat:'Backup / Restore',title:'Restore Site Configurations from SD Card',page:4,tags:['sd card','restore','configuration'],path:['SetUp','Restore','0 THRU 15','SD Card','Enter']},
+
+  {id:'zone-assign',cat:'Zones / Cause & Effect',title:'Assign Devices to Zones',page:4,tags:['zone','assign device'],path:['Set Up','Assign','Device','Enter Device Number','Loop','Enter Loop Number','Zone','Enter Target Zone','Enter']},
+  {id:'zone-modes',cat:'Zones / Cause & Effect',title:'Zone Display Modes',page:4,tags:['zonal','1stdev','all dev','all os'],list:[
+    'ZONE (ZONAL): Displays only the general Zone Label (factory default).',
+    '1stDev (FIRST OS): Displays only the specific custom label of the very first device that alarmed.',
+    'AllDev (ALL OSs): Displays and cycles the custom labels of all active devices in fire within the zone.'
+  ]},
+  {id:'zone-mode-set',cat:'Zones / Cause & Effect',title:'Determine / Set Zone Mode',page:4,tags:['zone mode','all dev','all os'],path:['Set Up','SetUp','Zone','Select Zone','Mode','AllDev/All OS','Enter']},
+  {id:'zone-task',cat:'Zones / Cause & Effect',title:'Set Up Zone Task',page:4,tags:['zone task','coincidence','build','fires','superfires','prefires'],path:['Set Up','SetUp','Remove','Zone','Select Zone','Task','Set fires/triggers from each Sensor','Build','Select Build','Sensors','Set differing Sensors','Pre-Fires','Set pre-fires','Fires','Set fires','Superfires','Set Super Fires','Enter']},
+  {id:'zone-command-build',cat:'Zones / Cause & Effect',title:'Set Up Command Build from a Zone Task',page:4,tags:['command build','zone task','sig3','reversible'],path:['Set Up','Set Up','Build','Select Build used in Zone Task','Action','Sector','1 - 32','Loop','Select Loop','Action','Sig3','Reversbl','Enter']},
+  {id:'walk-test-on',cat:'Zones / Cause & Effect',title:'Place Zone in Walk Test',page:4,tags:['walk test','zone','test'],path:['Control','Test','Zone','Enter Zone','Loop','Enter Loop','With/Without Sound','Enter']},
+  {id:'walk-test-off',cat:'Zones / Cause & Effect',title:'Remove Zone from Test Mode',page:4,tags:['walk test','zone','active'],path:['Control','Active','Zone','Enter Zone','Loop','Enter Loop','Enter']},
+
+  {id:'sector-rule',cat:'Sectors',title:'Sector 1 Fail-Safe Rule',page:5,tags:['sector 1','fail safe','default fire plan','one out all out'],note:'The help sheet states that Gent panels initialise with a “one-out, all-out” default fire plan. It says to retain Sector 1 as a backup, leave it unassigned to devices, and inter-action it with the other sectors so devices that fall back to Sector 1 can still sound under fire conditions.',critical:true},
+  {id:'remove-sensors-sector1',cat:'Sectors',title:'Remove Sensing Devices from Sector 1',page:5,tags:['sector 1','remove sensors'],path:['Set Up','Set Up','Remove','Device','1 THRU 207','Loop','1','Sector','1 THRU 32','Enter']},
+  {id:'remove-mcp-sector1',cat:'Sectors',title:'Remove Call Points from Sector 1',page:5,tags:['sector 1','remove mcp','call points'],path:['Set Up','Remove','MCP','1 THRU 207','Loop','1','Sector','1 THRU 32','Enter']},
+  {id:'remove-io-sector1',cat:'Sectors',title:'Remove Interface I/O Lines from Sector 1',page:5,tags:['sector 1','remove io','interface'],path:['Set Up','Remove','IO Line','1 THRU 4','Device','1 THRU 207','Loop','1','Sector','1 THRU 32','Enter']},
+  {id:'deaction-sectors',cat:'Sectors',title:'De-Action Sectors (Keep Sector 1 as Backup)',page:5,tags:['deaction','sector'],path:['Set Up','Deaction','Sector','2 THRU 32','Loop','1','Sector','2 THRU 32','Loop','1','Enter']},
+  {id:'crosslink-sector1',cat:'Sectors',title:'Fail-Safe Sector 1 Actions (Cross-Link)',page:5,tags:['sector 1','cross link','signal 2','cause effect'],list:[
+    '[Set Up] → [Action] → [Sector] → 1 → [Loop] → 1 → [Sector] → 2 THRU 32 → [Loop] → 1 → [Signal 2] → [Enter].',
+    '[Set Up] → [Action] → [Sector] → 2 THRU 32 → [Loop] → 1 → [Sector] → 1 → [Loop] → 1 → [Signal 2] → [Enter].'
+  ]},
+  {id:'assign-sector',cat:'Sectors',title:'Assign Device to a Sector',page:5,tags:['sector','assign device'],path:['Set Up','Set Up','Assign','Device','Enter Target Device Number','Loop','Enter Loop Number','Sector','Enter Target Sector','Enter']},
+  {id:'sector-action',cat:'Sectors',title:'Action Sector to Sector for Cause & Effect',page:5,tags:['sector','cause effect','signal 1','signal 2','signal 3'],path:['Set Up','Action','Sector','ACTION / TARGET SECTOR','Loop','1','Sector','TRIGGER SECTOR','Loop','Enter Loop','Signal 1/2/3','Enter']},
+  {id:'silence-noaction',cat:'Sectors',title:'Modify Sector to Ignore Silence Alarms',page:5,tags:['silence alarms','no action','plant','sector 29','sector 32'],path:['Set Up','Sector','Enter Sector','Loop','Enter Loop No.','Silence','NoAction','Enter'],note:'The help sheet states this is used where plant outputs must remain operated until a physical panel Reset. It also states sectors 29–32 are already configured by default in this way.',critical:true},
+
+  {id:'phased-overview',cat:'Phased Evac',title:'Phased Evacuation Example Strategy',page:6,tags:['delay block','phased evac','top floor','middle floor','ground floor'],note:'Example in the help sheet: Top Floor Sector 12 evacuates immediately. Delay Block 1 changes Middle Floor Sector 11 from Alert (Signal 1) to Evacuate (Signal 2) after 8 seconds. Delay Block 2 then escalates Ground Floor Sector 10 to evacuation.'},
+  {id:'phased-assign',cat:'Phased Evac',title:'Phased Evac — Step 1: Assign Sectors',page:6,tags:['ground floor','1f','2f','sector 10','sector 11','sector 12'],list:[
+    'GF: [Set Up] → [Assign] → [Device] → Enter Devices for GF → [Loop] → Enter Loop → [Sector] → 10 → [Enter].',
+    '1F: [Set Up] → [Assign] → [Device] → Enter Devices for 1F → [Loop] → Enter Loop → [Sector] → 11 → [Enter].',
+    '2F: [Set Up] → [Assign] → [Device] → Enter Devices for 2F → [Loop] → Enter Loop → [Sector] → 12 → [Enter].'
+  ]},
+  {id:'phased-actions',cat:'Phased Evac',title:'Phased Evac — Step 2: Sector Actions',page:6,tags:['signal 1','signal 2','sector 10','sector 11','sector 12'],list:[
+    '2F Evac: Action Sector 12 from Trigger Sector 12 using Signal 2.',
+    '2F Alert to lower floors: Action Sectors 10–11 from Trigger Sector 12 using Signal 1.',
+    '1F Evac: Action Sectors 11–12 from Trigger Sector 11 using Signal 2.',
+    '1F Alert to lower floors: Action Sector 10 from Trigger Sector 11 using Signal 1.',
+    'GF Evac to all floors: Action Sectors 10–12 from Trigger Sector 10 using Signal 2.'
+  ]},
+  {id:'delay1',cat:'Phased Evac',title:'Configure Delay Block 1',page:6,tags:['delay block 1','8 seconds','sector 11','sector 12'],list:[
+    'Set delay: [Set Up] → [SetUp] → [Delay Block] → 1 → [Delay] → 00-08 → [Enter].',
+    'Set action: [Set Up] → [SetUp] → [Delay Block] → 1 → [Action] → [Sig.2] → [Enter].',
+    'Trigger Delay Block 1 from 2F Sector 12: [Set Up] → [Action] → [Delay Block] → 1 → [Sector] → 12 → [Loop] → 1 → [Enter].',
+    'Trigger 1F Sector 11 from Delay Block 1: [Set Up] → [Action] → [Sector] → 11 → [Loop] → 1 → [Delay Block] → 1 → [Enter].'
+  ]},
+  {id:'delay2',cat:'Phased Evac',title:'Configure Delay Block 2',page:7,tags:['delay block 2','8 seconds','sector 10'],list:[
+    'Set delay: [Set Up] → [SetUp] → [Delay Block] → 2 → [Delay] → 00-08 → [Enter].',
+    'Set action: [Set Up] → [SetUp] → [Delay Block] → 2 → [Action] → [Sig.2] → [Enter].',
+    'Trigger Delay Block 2 from Delay Block 1: [Set Up] → [Action] → [Delay Block] → 2 → [Delay Block] → 1 → [Enter].',
+    'Trigger GF Sector 10 from Delay Block 2: [Set Up] → [Action] → [Sector] → 10 → [Loop] → 1 → [Delay Block] → 2 → [Enter].'
+  ]},
+  {id:'clear-phased',cat:'Phased Evac',title:'Clear All Phased Evacuation Programming',page:7,tags:['clear delay','remove phased evac','deaction delay blocks'],list:[
+    'Zero all Delay Timers: [Set Up] → [Set Up] → [Delay Block] → 1 - 16 → [Delay] → 00:00 → [Enter].',
+    'De-Action Delay Blocks from Sectors: [Set Up] → [Deaction] → [Sector] → 1 - 32 → [Loop] → 1 → [Delay Block] → 1 - 16 → [Enter].',
+    'De-Action Sectors from Delay Blocks: [Set Up] → [Deaction] → [Delay Block] → 1 - 16 → [Sector] → 1 - 32 → [Loop] → 1 → [Enter].'
+  ]},
+
+  {id:'sensor-state12',cat:'Sensor States',title:'Set Sensor Sensitivity Permanently to State 12',page:7,tags:['sensor state','state 12','heat only','sensitivity'],path:['Set Up','PIN','SetUp','Device','Enter Address','Loop','Enter Loop No','State','12','12','Enter'],note:'The help sheet describes this as setting both Day and Night to State 12 (Heat-Only).'},
+  {id:'sensor-timed',cat:'Sensor States',title:'Timed Sensor Sensitivity Example',page:7,tags:['timeslot','time block','state 12','state 0','08:30','17:30'],list:[
+    'Program Time Slot 1: [Set Up] → PIN → [TimeSlot] → 1 → [Enable] → 08:30 → [Disable] → 17:30 → [And] → Mon Tue Wed Thu Fri → [Enter].',
+    'Link Time Slot 1 to Time Block 1: [Set Up] → PIN → [TimeBlok] → 1 → [Assign] → [TimeSlot] → 1 → [Enter].',
+    'Apply states and bind to Time Block: [Set Up] → PIN → [Device] → Enter Device → [Loop] → 1 → [State] → 12 → 0 → [TimeBlok] → 1 → [Enter].'
+  ],note:'Example purpose in the help sheet: State 12 (Heat-Only) 08:30–17:30 Monday–Friday, with State 0 outside those times.'},
+
+  {id:'ansul-build',cat:'Command Builds',title:'Command Build — Key Switch to Isolate Ansul Interface',page:8,tags:['ansul','key switch','device 14','device 27','reversible'],list:[
+    'Trigger build from key switch: [Set Up] → [Set Up] → [Build] → Select Build → [Trigger] → [I/O Line] → 1 → [Device] → 14 → [Loop] → 1 → [Enter].',
+    'Disable Ansul interface: [Set Up] → [Set Up] → [Build] → Select Build → [Action] → [Disable] → [Device] → 27 → [Loop] → 1 → [Reversbl] → [Enter].',
+    'Label build: [Set Up] → [Set Up] → [Build] → Select Build → [Label] → Ansul Isolated → [Enter].'
+  ]},
+  {id:'u-buttons',cat:'Command Builds',title:'Configurable Door Buttons U1–U4 — Default Logic',page:8,tags:['u1','u2','u3','u4','251','252','253','254'],list:[
+    'U1 Key = Command Build 251; help-sheet example maps all sectors 1 THRU 32.',
+    'U2 Key = Command Build 252; help-sheet example links Command Builds 2, 3 and 4.',
+    'U3 & U4 = Command Builds 253 & 254; predefined for user-customized actions with door LEDs.'
+  ]},
+  {id:'u1-program',cat:'Command Builds',title:'Program U1 (CB 251) to Disable All Loop Sectors',page:8,tags:['u1','251','disable sectors','reversible'],path:['Set Up','PIN','SetUp','Build','251','Action','Disable','Sector','1 THRU 32','Loop','1','Reversbl','Enter']},
+  {id:'u2-program',cat:'Command Builds',title:'Program U2 (CB 252) to Link Support Builds 2–4',page:8,tags:['u2','252','builds 2 3 4','reversible'],path:['Set Up','PIN','SetUp','Build','252','Action','Build','2 THRU 4','ON','Reversbl','Enter']},
+  {id:'class-change',cat:'Command Builds',title:'Class Change — 5 Second Pulsed Lesson Change',page:8,tags:['class bells','lesson change','timeslot','time block','signal 1'],list:[
+    'Program Time Slot 1 for 09:00:00 to 09:00:05: [Set Up] → [TimeSlot] → 1 → [Enable] → 09:00:00 → [Disable] → 09:00:05 → [And] → Mon Tue Wed Thu Fri → [Enter].',
+    'Repeat for Slots 2–5 for the other example times: 11:00, 12:30, 14:00 and 15:30.',
+    'Link Slots 1–5 to Time Block 2: [Set Up] → PIN → [TimeBlok] → 2 → [Assign] → [TimeSlot] → 1 - 5 → [Enter].',
+    'Link Time Block 2 to Command Build 5: [Set Up] → [SetUp] → [Build] → 5 → [Trigger] → [TimeBlk] → 2 → [Enter].',
+    'Assign reversible Signal 1 across Sectors 2–5: [SetUp] → [Build] → 5 → [Action] → [Sector] → 2 THRU 5 → [Loop] → 1 → [Signal 1] → [Reversbl] → [Enter].'
+  ]},
+  {id:'device-group',cat:'Command Builds',title:'Assign Device to Groups',page:8,tags:['group','assign','device'],path:['Set Up','PIN','Device','Enter Address','Loop','Enter Loop No','Group','Enter Group','Enter']}
+];
+
+const faults = [{"id":"fault-spurious-firq","title":"A spurious FIRQ at card x","page":93,"associated":"MCC / MCB (main control card/board)","meaning":"There is a glitch on the MCC hardware that appears on the backplane / MCB.","action":"Clear and ignore a single occurrence.","tags":["spurious","firq","mcc","mcb","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-irq","title":"A spurious IRQ at card x","page":93,"associated":"MCC / MCB (main control card/board)","meaning":"There is a glitch on the MCC / MCB hardware.","action":"Clear and ignore a single occurrence.","tags":["spurious","irq","mcc","mcb"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-nmi","title":"A spurious NMI at card x","page":93,"associated":"MCC / MCB (main control card/board)","meaning":"There is a glitch on the MCC / MCB hardware.","action":"Clear and ignore a single occurrence.","tags":["spurious","nmi","mcc","mcb"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-swi2","title":"A spurious SWI2 at card x","page":93,"associated":"MCC / MCB (main control card/board)","meaning":"There is a glitch on the MCC hardware.","action":"Clear and ignore a single occurrence.","tags":["spurious","swi2","mcc"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-swi3","title":"A spurious SWI3 at card x","page":93,"associated":"MCC / MCB (main control card/board)","meaning":"There is a glitch on the MCC / MCB hardware.","action":"Clear and ignore a single occurrence.","tags":["spurious","swi3","mcc","mcb"],"type":"fault","cat":"Fault Finder"},{"id":"fault-access","title":"Access fault at card x","page":93,"associated":"Any Card","meaning":"Card cannot talk to the MCC / MCB local controller. It may also be caused by excessive network messages.","action":"Replace the card if the fault keeps reoccurring. Investigate message passing if excessive network messages may be involved.","tags":["access fault","card","mcc","mcb","network"],"type":"fault","cat":"Fault Finder"},{"id":"fault-acia","title":"ACIA Failed at card x","page":93,"associated":"Network Card or MCC / MCB","meaning":"Communication chip failure or the FABs and SABs are corrupt.","action":"Reset the card and replace it if the fault keeps reoccurring.","tags":["acia","network","fab","sab","card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-double","title":"Allocation : Double Allocated card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"Two devices are given the same address. Loop breaker relay contacts may be micro-welded closed, or there may be a bad connection.","action":"Check the device wiring. The device may be faulty; replace if required.","tags":["allocation","double allocated","duplicate","same address","loop","device"],"clearType":"Latching","type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-hw","title":"Allocation : Hw fault card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"Loop breaker relay has not closed, serial line End-2 is faulty, or the relay is stuck closed. The device may not be correctly fitted.","action":"Check the device wiring. The device may be faulty; replace if required.","tags":["allocation","hardware fault","hw fault","loop breaker","end 2"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-map","title":"Allocation : Map error card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"Loop wiring is incorrect; for example, a sub-loop may have been wired on a spur.","action":"Check and rewire if necessary. This fault can also be device failure.","tags":["allocation","map error","spur","loop wiring","device"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-memory","title":"Allocation : memory Overflow at card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"The loop processor has run out of memory during allocation or while starting a loop.","action":"The manual identifies a software error or, more likely, a faulty RAM chip.","tags":["allocation","memory overflow","ram","loop processor"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-not-ready","title":"Allocation : not ready at card x","page":94,"associated":"LPC (loop processor card)","meaning":"An attempt has been made to allocate a loop while it is already allocating.","action":"Wait. If it takes longer than 10 minutes, reset the loop card.","tags":["allocation","not ready","allocating","loop card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-end2","title":"Allocation started from end 2 at card x","page":94,"associated":"LPC (loop processor card)","meaning":"No devices were found on End-1, or End-1 of the loop is open circuit.","action":"Check the wiring to the first device or last device on the loop.","tags":["allocation","end 2","end 1","open circuit","o/c","loop"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-too-many","title":"Allocation : Too many card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"More than 200 devices have been allocated, or a device is restricted for use with the particular software version.","action":"Replace incompatible devices used on other systems, such as 32000 or SMS devices found in the system.","tags":["allocation","too many","200 devices","incompatible device"],"type":"fault","cat":"Fault Finder"},{"id":"fault-allocation-tx","title":"Allocation : Tx fault card x number y on loop z","page":94,"associated":"LPC (loop processor card)","meaning":"Invalid reply from the device.","action":"Check the device. Also check cable routing and length; measure resistance and capacitance of the cable.","tags":["allocation","tx fault","transmission","invalid reply","resistance","capacitance"],"clearType":"Latching","type":"fault","cat":"Fault Finder"},{"id":"fault-ascii-device","title":"ASCII Device is faulty number x on loop y","page":95,"associated":"LPC (loop processor card)","meaning":"The control panel has failed to communicate with a Repeat / Mimic panel. Its power supply may not be connected.","action":"If applicable, connect the power supply or reset the Master Repeat Card in the Repeat / Mimic panel. Replace the card/software if necessary.","tags":["ascii","repeat","mimic","communication"],"type":"fault","cat":"Fault Finder"},{"id":"fault-backup-required","title":"Back up required","page":95,"associated":"NVM (non volatile memory) on backplane or MCB","meaning":"Data must be saved to memory.","action":"Back up the data to memory.","tags":["backup required","nvm","memory"],"type":"fault","cat":"Fault Finder"},{"id":"fault-battery-discharged","title":"Battery discharged","page":95,"associated":"Power supply","meaning":"The battery load test has failed. The manual states the ADC value should be equal to or less than normal - 9.","action":"Check the load test and battery condition.","tags":["battery","discharged","load test","adc","psu"],"type":"fault","cat":"Fault Finder"},{"id":"fault-battery-disconnected","title":"Battery disconnected / restored","page":95,"associated":"Power supply","meaning":"A disconnection is indicated when the ADC value from the battery is equal to or less than 130. Normal is stated as 234 (27.4V).","action":"Check the battery connection/condition. The manual gives the restored indication calculation as Vbatt 1/6 × 256/5.","tags":["battery disconnected","battery restored","27.4v","adc"],"type":"fault","cat":"Fault Finder"},{"id":"fault-buffers-out-step","title":"Buffers out of step at card x","page":95,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["buffers out of step","software","card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-callpoint-glass","title":"Call point glass is broken number x loop y","page":95,"associated":"Device","meaning":"The call point has been operated while the device is disabled.","action":"Replace the glass if necessary.","tags":["call point","mcp","glass broken","disabled"],"type":"fault","cat":"Fault Finder"},{"id":"fault-callpoint-oc","title":"Call point open cct number x on loop y","page":96,"associated":"Device","meaning":"The monitored base does not see the end-of-line unit. There is a bad connection in the MCP.","action":"Check the internal wiring; there may be a loose connection.","tags":["call point","mcp","open circuit","oc","o/c","eol"],"type":"fault","cat":"Fault Finder"},{"id":"fault-callpoint-sc","title":"Call point short cct number x loop y","page":96,"associated":"Device","meaning":"The call point contacts are short circuit.","action":"Check the call point contacts and internal wiring.","tags":["call point","mcp","short circuit","sc","s/c"],"type":"fault","cat":"Fault Finder"},{"id":"fault-card-lost","title":"Card found/lost at card x","page":96,"associated":"Any Card","meaning":"The card has been found/lost. If lost, it is locked out.","action":"There may be a hardware fault on the card or backplane. Investigate and rectify.","tags":["card lost","backplane","hardware"],"type":"fault","cat":"Fault Finder"},{"id":"fault-charger-panel","title":"Charger Fault — Panel","page":96,"associated":"Panel Power Supply Unit (PSU)","meaning":"The charger circuit has failed.","action":"Replace the PSU.","tags":["charger fault","psu","battery","panel"],"type":"fault","cat":"Fault Finder"},{"id":"fault-charger-device","title":"Charger Fault number x on loop y","page":96,"associated":"EN54 system device power supply","meaning":"The charger circuit has failed at a loop device such as a Repeat, Mimic or mains-powered interface.","action":"Replace the board containing the power supply on the loop device.","tags":["charger fault","loop device","repeat","mimic","interface"],"type":"fault","cat":"Fault Finder"},{"id":"fault-nvm-write-protected","title":"NVM is write protected at Card x","page":96,"associated":"NVM on backplane or MCB","meaning":"The memory is read only.","action":"Disable the write protect using the [Set Up] menu.","tags":["nvm","write protected","read only","backup"],"type":"fault","cat":"Fault Finder"},{"id":"fault-clock","title":"Clock changed / Clock not set up","page":97,"associated":"MCC / MCB","meaning":"The time and date have been altered or no time has been entered.","action":"If necessary, set the clock using the Set Up menu.","tags":["clock","time","date","not set"],"type":"fault","cat":"Fault Finder"},{"id":"fault-co","title":"CO sensor faulty","page":97,"associated":"Device","meaning":"There is a fault with the CO sensor in an S-Quad.","action":"Replace the device.","tags":["co sensor","s-quad","carbon monoxide"],"type":"fault","cat":"Fault Finder"},{"id":"fault-co-life","title":"CO sensor near end of life","page":97,"associated":"Device","meaning":"The CO cell in an S-Quad is nearing the end of the manufacturer recommended life expectancy.","action":"Replace the device.","tags":["co sensor","end of life","s-quad"],"type":"fault","cat":"Fault Finder"},{"id":"fault-comms-supply","title":"Comms Supply Fault","page":97,"associated":"Network node","meaning":"The communications power supply has failed.","action":"Replace the power supply unit.","tags":["comms supply","network","power supply"],"type":"fault","cat":"Fault Finder"},{"id":"fault-comms-start-stop","title":"Communications started / stopped at card x","page":97,"associated":"MCC / MCB","meaning":"Communication to a panel or external equipment linked to the panel has started or stopped.","action":"Check the wiring.","tags":["communications stopped","comms","laptop","commissioning tool"],"type":"fault","cat":"Fault Finder"},{"id":"fault-corrupt-nvm","title":"Corrupted NVM memory at card x","page":97,"associated":"Any Card","meaning":"Checksum failure on configuration at midnight.","action":"Recover data and record the event in the log book. If it reoccurs, replace the card.","tags":["corrupted nvm","checksum","memory"],"type":"fault","cat":"Fault Finder"},{"id":"fault-dc-high-low","title":"DC too high / DC too low","page":98,"associated":"Power supply","meaning":"The DC supply is too high if greater than 164 (32V), or too low if less than 102 (20V).","action":"Check the mains supply and battery wiring.","tags":["dc high","dc low","32v","20v","psu"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-address-changed","title":"Device Address changed from x number y on loop z","page":98,"associated":"Device","meaning":"The device SAFE address has changed.","action":"If necessary, rectify the device SAFE address.","tags":["device address changed","safe address","safe"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-battery","title":"Device battery fault / restored","page":98,"associated":"Device","meaning":"The battery has failed the load test at the device. For a mains-powered interface the manual describes the fault threshold as normal minus 2V.","action":"Check and replace the battery if necessary.","tags":["device battery","battery fault","interface"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-battery-oc","title":"Device Battery OC number x on loop y","page":99,"associated":"Device","meaning":"Failure of a fuse or open-circuit battery wiring on products such as a mains-powered interface unit. Normal value is stated as 27.4V.","action":"Check and replace if necessary to restore.","tags":["device battery oc","open circuit","battery wiring","27.4v","interface"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-fault","title":"Device Fault number x on loop y","page":99,"associated":"ACU (Audio Control Unit)","meaning":"Fault input has been asserted.","action":"Check remote equipment wired to the fault input.","tags":["device fault","acu","audio control unit","fault input"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-mains","title":"Device Mains Failed / Restored number x loop y","page":99,"associated":"Device","meaning":"Failure of mains supply to a Mimic, Repeat or mains-powered interface. The manual states failed rectified DC is equal to or less than 8V.","action":"Check mains supply connections and the mains fuse. The manual states restored is when rectified DC is greater than 24V.","tags":["device mains failed","mimic","repeat","interface","fuse"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-mains-high-low","title":"Device Mains too high / low number x loop y","page":99,"associated":"Mimic / Repeat / mains-powered interface","meaning":"Failure of device mains supply; rectified DC is in the region of 30V high or 17V low.","action":"Check the power supply and replace it if necessary.","tags":["device mains high","device mains low","30v","17v","interface"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-power","title":"Device power Fault / Restored number x on loop y","page":99,"associated":"Device","meaning":"Failure of an internal power supply rail.","action":"Replace the device.","tags":["device power fault","power rail"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-power-high-low","title":"Device power too high / too low number x on loop y","page":100,"associated":"Device","meaning":"Internal power rail of a mains-powered interface is outside the stated thresholds: high at 32V or above; low at 24V or below.","action":"Replace the device.","tags":["device power high","device power low","interface","32v","24v"],"type":"fault","cat":"Fault Finder"},{"id":"fault-device-replaced-faulty","title":"Device Replaced is faulty number x on Loop y","page":100,"associated":"LPC (loop processor card)","meaning":"A Tx fault occurred while re-finding the device.","action":"Check connections to the device/base and check the device type.","tags":["device replaced faulty","tx fault","base","replacement"],"type":"fault","cat":"Fault Finder"},{"id":"fault-safe-mismatch","title":"Device soft address; SAFE: number x on loop y","page":100,"associated":"Device","meaning":"The device primary address does not match the SAFE address.","action":"Check the loop configuration.","tags":["soft address","safe address","mismatch","loop configuration"],"type":"fault","cat":"Fault Finder"},{"id":"fault-duplicate-safe","title":"Duplicate SAFE Address error: number x on loop y","page":100,"associated":"Device","meaning":"Two devices on a loop have the same SAFE address.","action":"Change one of the SAFE addresses.","tags":["duplicate safe","safe address","same safe","double address"],"type":"fault","cat":"Fault Finder"},{"id":"fault-earth","title":"Earth Fault / Fault Cleared","page":100,"associated":"Power supply","meaning":"The manual describes an earth-fault indication from the 8V regulator ADC; it also gives a clear indication value.","action":"Investigate and rectify the earth fault. For loop-card earth faults, use the Loop Diagnostic Tool as described in the manual.","tags":["earth fault","ground fault","positive earth","negative earth"],"type":"fault","cat":"Fault Finder"},{"id":"fault-earth-card","title":"Earth Fault at Card n / Loop n","page":100,"associated":"LPC (2Km Loop Processor Card)","meaning":"There is an earth fault present before allocation. An earth fault after allocation is indicated as “Earth fault”.","action":"Use the Loop Diagnostic Tool to diagnose the earth fault condition and rectify it.","tags":["earth fault","card","loop","ldt","before allocation"],"type":"fault","cat":"Fault Finder"},{"id":"fault-exception","title":"Exception number x on loop y","page":101,"associated":"Loop Processor Card","meaning":"A change has been noted in the environment of the device. Exceptions are also referred to as Sub-Faults.","action":"Check the condition codes.","tags":["exception","sub fault","condition code","sensor"],"type":"fault","cat":"Fault Finder"},{"id":"fault-excessive-tx-errors","title":"Excessive transmission error rate / Too many errors: lost device or loop split","page":101,"associated":"LPC (loop processor card)","meaning":"There were more than 10 reply errors in one day. The manual notes that more than 16 reply errors will cause device isolation.","action":"Check screening and electrical noise in the area of operation, and check for loose loop connections.","tags":["transmission errors","too many errors","lost device","loop split","screening","electrical noise"],"type":"fault","cat":"Fault Finder"},{"id":"fault-fare","title":"FARE Faulty / Restored number x loop y zone w","page":101,"associated":"Device","meaning":"A faulty message indicates a fault associated with FARE equipment; restored indicates that the fault has been investigated and rectified.","action":"Investigate and rectify the associated FARE equipment fault.","tags":["fare","fire alarm routing equipment","faulty"],"type":"fault","cat":"Fault Finder"},{"id":"fault-flash-checksum","title":"Flash memory checksum error","page":102,"associated":"Device","meaning":"Speech Memory Checksum Error.","action":"Replace the device.","tags":["flash memory","checksum","speech memory"],"type":"fault","cat":"Fault Finder"},{"id":"fault-keyboard","title":"Full keyboard Removed / Fitted number x loop y","page":102,"associated":"MCC / MCB / DAC / MRC","meaning":"The keyboard has been removed or is not fitted.","action":"Check the cable connections to the keyboard to bring about the fitted message.","tags":["keyboard removed","keyboard fitted","cable"],"type":"fault","cat":"Fault Finder"},{"id":"fault-high-error-rate","title":"High Error rate at Card x","page":102,"associated":"Network","meaning":"High number of communication errors.","action":"Check network wiring and connections.","tags":["high error rate","network","communication errors"],"type":"fault","cat":"Fault Finder"},{"id":"fault-incompatible-card","title":"Incompatible Card Version at card x","page":102,"associated":"Any Card","meaning":"There is a card software conflict.","action":"Fit a card with compatible software.","tags":["incompatible card","card version","software conflict"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-failed","title":"Interface Failed at card x","page":102,"associated":"MCC / MCB","meaning":"The interface timer chip has failed.","action":"Clear the fault and ignore a single occurrence. Replace the card on multiple failures.","tags":["interface failed","timer chip","card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-input","title":"Interface input - fault / restored number x on loop y channel z","page":102,"associated":"Device","meaning":"I/O line fault.","action":"Check the wiring and restore the input for normal operation.","tags":["interface input fault","io line","wiring"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-not-reset","title":"Interface input not Reset number x on loop y channel z","page":103,"associated":"Device","meaning":"The input line continues to trigger.","action":"Check devices on the I/O line.","tags":["interface input not reset","io line","trigger"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-oc","title":"Interface Input OC / restored","page":103,"associated":"Device","meaning":"The end-of-line is not seen.","action":"Check the wiring. The device may have been removed; if so, refit the device to restore.","tags":["interface input oc","open circuit","eol","removed device"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-sc","title":"Interface input SC / restored number x on loop y channel z","page":103,"associated":"Device","meaning":"The interface wiring is short circuit. The manual states the input value is equal to or less than 2V.","action":"Check the interface wiring and rectify to restore the input.","tags":["interface input sc","short circuit","2v"],"type":"fault","cat":"Fault Finder"},{"id":"fault-interface-output","title":"Interface output SC or OC or Restored number x on loop y channel y","page":103,"associated":"Device","meaning":"The output circuit is indicated as short circuit or open circuit. The manual states the SC value is equal to or less than 50%.","action":"Check the wiring and restore the output circuit.","tags":["interface output","short circuit","open circuit","sc","oc"],"type":"fault","cat":"Fault Finder"},{"id":"fault-intermittent","title":"Intermittent Fault at card x","page":103,"associated":"Any Card","meaning":"A fault has been picked up by the MCC / MCB.","action":"Replace the appropriate card if the fault keeps reoccurring.","tags":["intermittent fault","card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-invalid-config","title":"Invalid configuration / Invalid configuration at card x","page":103,"associated":"LPC (loop processor card)","meaning":"Loop recovered with freeblocks ON, or the loop configuration is faulty, possibly after upload from the Commissioning Tool.","action":"Switch OFF the freeblocks and reallocate. A device FLASH incorrectly programmed should be replaced.","tags":["invalid configuration","freeblocks","commissioning tool","reallocate"],"clearType":"Latching","type":"fault","cat":"Fault Finder"},{"id":"fault-invalid-message","title":"Invalid message / reply received at card x","page":103,"associated":"LPC / Network Card","meaning":"The message or reply received cannot be understood. It may originate from a Repeat, Mimic or networked system.","action":"Ignore a single occurrence and record it in the log book.","tags":["invalid message","invalid reply","network","repeat","mimic"],"type":"fault","cat":"Fault Finder"},{"id":"fault-invalid-task-delay","title":"Invalid task delay at card x","page":104,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["invalid task delay","software error"],"type":"fault","cat":"Fault Finder"},{"id":"fault-invalid-task-stage","title":"Invalid task stage","page":104,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["invalid task stage","software error"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-map-changed","title":"Loop map has changed card x","page":104,"associated":"LPC (loop processor card)","meaning":"The loop map is different to that previously allocated.","action":"Check and confirm the difference against the backup map.","tags":["loop map changed","map","backup"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-high-res","title":"Loop n: High resistance","page":104,"associated":"LPC (2Km Loop Processor Card)","meaning":"High resistance on both lines.","action":"Use the Loop Diagnostic Tool to diagnose the cause of high resistance on the loop and rectify it.","tags":["loop high resistance","high resistance","ldt"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-high-res-neg","title":"Loop n: High resistance on negative line","page":104,"associated":"LPC (2Km Loop Processor Card)","meaning":"High resistance on 0V lines.","action":"Use the Loop Diagnostic Tool to diagnose the cause of high resistance on the negative line and rectify it.","tags":["high resistance negative","0v","negative line","ldt"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-overloaded","title":"Loop n: Overloaded","page":104,"associated":"LPC (2Km Loop Processor Card)","meaning":"The loop is overloaded and is taking too much current.","action":"Use the Loop Diagnostic Tool to diagnose the fault condition and rectify it.","tags":["loop overloaded","too much current","ldt"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-reply-marginal","title":"Loop n: Reply marginal","page":104,"associated":"LPC (2Km Loop Processor Card)","meaning":"The named device is at the marginal limits of correct communications, in timing or level.","action":"Use the Loop Diagnostic Tool to diagnose the cause of the communication issue and rectify it.","tags":["reply marginal","communication","timing","level","ldt"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-start-not-ready","title":"Loop Started not ready at card x number y loop z","page":104,"associated":"LPC (loop processor card)","meaning":"The loop has started but is not ready.","action":"Wait. If it takes longer than 10 minutes, reset the loop card.","tags":["loop started not ready","loop card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-stopped","title":"Loop stopped at Card x","page":104,"associated":"LPC (loop processor card)","meaning":"The loop has been aborted or is still being allocated.","action":"Re-allocate the loop.","tags":["loop stopped","aborted","allocate","reallocate"],"type":"fault","cat":"Fault Finder"},{"id":"fault-loop-voltage","title":"Loop voltage too high / low","page":105,"associated":"Power supply","meaning":"The loop supply ADC value is too high or too low.","action":"Check PSU values in the [Test/Eng] menu; the manual states normal reading is 221. Check fuses and replace the PSU if necessary.","tags":["loop voltage","high","low","psu","221"],"type":"fault","cat":"Fault Finder"},{"id":"fault-lost-command","title":"Lost Command number x Loop y","page":105,"associated":"LPC (loop processor card)","meaning":"Lost FAB/SAB.","action":"Ignore a single occurrence and record it in the log book.","tags":["lost command","fab","sab"],"type":"fault","cat":"Fault Finder"},{"id":"fault-lost-device","title":"Lost Device number x on loop y","page":105,"associated":"LPC (loop processor card)","meaning":"There is no reply on Ends 1 & 2 of the device.","action":"Check the device connections.","tags":["lost device","no reply","end 1","end 2","connections"],"clearType":"Latching","type":"fault","cat":"Fault Finder"},{"id":"fault-lost-slave","title":"Lost slave Device number x on loop y","page":105,"associated":"LPC (loop processor card)","meaning":"There is no reply on Ends 1 & 2 of the device.","action":"Check the slave device connections and replace if necessary.","tags":["lost slave","slave device","no reply"],"clearType":"Latching","type":"fault","cat":"Fault Finder"},{"id":"fault-magnetic-switch","title":"Magnetic switch operated number x loop y","page":105,"associated":"Device","meaning":"The reset switch in the base has closed; the manual states this applies to 3400 devices only.","action":"Check the base and proximity of a magnetic field.","tags":["magnetic switch","3400","base"],"type":"fault","cat":"Fault Finder"},{"id":"fault-main-program","title":"Main program not running at card x","page":105,"associated":"Any Card","meaning":"Problem with software. The watchdog will operate the MCC / MCB and software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["main program not running","software","watchdog"],"type":"fault","cat":"Fault Finder"},{"id":"fault-mains-failed","title":"Mains failed / restored","page":105,"associated":"Power supply","meaning":"Failure is detected when the ADC output from the rectifier is equal to or less than 105.","action":"Check mains and fuse. Replace the PSU if necessary. The manual states 60V is normally required for a restored message.","tags":["mains failed","mains restored","fuse","psu","rectifier"],"type":"fault","cat":"Fault Finder"},{"id":"fault-mains-high","title":"Mains too high","page":105,"associated":"Power supply","meaning":"The ADC value is too high.","action":"Check PSU values in the [Test/Eng] menu. Replace the PSU if necessary.","tags":["mains too high","adc","psu"],"type":"fault","cat":"Fault Finder"},{"id":"fault-mains-low","title":"Mains too low","page":105,"associated":"Power supply","meaning":"Mains supply is too low.","action":"Investigate the mains supply condition.","tags":["mains too low","psu"],"type":"fault","cat":"Fault Finder"},{"id":"fault-master-alarm","title":"Master alarm OC or SC","page":105,"associated":"Power supply","meaning":"No end-of-line unit is seen. The manual gives ADC thresholds above 92 or below 37; restored is 74.","action":"Check wiring to the master alarm circuits. Ensure EOLs are connected inside the control panel if master alarm circuits are not used.","tags":["master alarm","oc","sc","open circuit","short circuit","eol"],"type":"fault","cat":"Fault Finder"},{"id":"fault-master-polling","title":"Master polling / not polling at card x","page":106,"associated":"MCC / MCB","meaning":"PC or SRI (service request interface) is not handshaking with the control panel.","action":"Check the wiring.","tags":["master polling","not polling","sri","pc","handshake"],"type":"fault","cat":"Fault Finder"},{"id":"fault-memory-corrupt","title":"Memory corrupt number x loop y","page":106,"associated":"Device","meaning":"FLASH checksum failure.","action":"Replace the device.","tags":["memory corrupt","flash","checksum"],"type":"fault","cat":"Fault Finder"},{"id":"fault-message-discarded","title":"Message discarded","page":106,"associated":"Network Card / LPC","meaning":"A message was received that could not be routed or understood.","action":"Check the location displayed and try resetting the card.","tags":["message discarded","network","route","reset card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-neighbour-ack","title":"Neighbour ACK Failed at card n","page":106,"associated":"Network","meaning":"Repeated address.","action":"Check domain addresses are unique.","tags":["neighbour ack failed","domain address","duplicate address","network"],"type":"fault","cat":"Fault Finder"},{"id":"fault-network-insecure","title":"Network Insecure / Secure at card x","page":106,"associated":"Network Card","meaning":"There are 3 missing replies in a row on End-2 of the controller.","action":"Check the wiring and check the error rate.","tags":["network insecure","missing replies","end 2"],"type":"fault","cat":"Fault Finder"},{"id":"fault-network-wiring","title":"Network wiring fault at card x","page":106,"associated":"Network Card","meaning":"Wiring is presumed to be open circuit between panels.","action":"Check the wiring.","tags":["network wiring fault","open circuit","oc","panel"],"type":"fault","cat":"Fault Finder"},{"id":"fault-nmi-missed","title":"NMI’s missed at card x","page":107,"associated":"LPC (loop processor card)","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["nmi missed","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-no-periodic","title":"No periodic interrupts at card x","page":107,"associated":"Any Card","meaning":"Problem with software; the watchdog will operate the MCC / MCB.","action":"Ignore a single occurrence and record the event in the log book.","tags":["no periodic interrupts","software","watchdog"],"type":"fault","cat":"Fault Finder"},{"id":"fault-no-response","title":"No response number x loop y","page":107,"associated":"LPC (loop processor card)","meaning":"There is no communication with Repeat or Mimic panel software.","action":"Power up the Repeat or Mimic panel.","tags":["no response","repeat","mimic","communication"],"type":"fault","cat":"Fault Finder"},{"id":"fault-nvm-no-room","title":"No room on NVM card","page":107,"associated":"NVM on backplane or MCB","meaning":"A backup/save is being attempted to an NVM that does not have enough free space.","action":"If there is no memory left, initialise Card 14 on the backplane or the NVM on MCB (Card 0), as applicable.","tags":["no room nvm","memory full","card 14","backup"],"type":"fault","cat":"Fault Finder"},{"id":"fault-node-double","title":"Node double allocated at card x","page":107,"associated":"Network Card","meaning":"Two network cards have the same address.","action":"Keep network addresses unique.","tags":["node double allocated","network address","duplicate"],"type":"fault","cat":"Fault Finder"},{"id":"fault-node-lost","title":"Node lost / restored at card x","page":107,"associated":"Network Card","meaning":"There have been 15 missing replies from another panel.","action":"Check the wiring or check/reset the panel network card to restore.","tags":["node lost","network","missing replies","panel"],"type":"fault","cat":"Fault Finder"},{"id":"fault-not-enough-ram","title":"Not enough RAM at card x","page":107,"associated":"Any Card","meaning":"Not enough memory.","action":"Reset the card and ignore a single occurrence. If necessary, replace the card or add RAM where applicable.","tags":["not enough ram","memory","card"],"type":"fault","cat":"Fault Finder"},{"id":"fault-nothing-found","title":"Nothing found at card x","page":107,"associated":"LPC (loop processor card)","meaning":"No devices found on End 1 or End 2.","action":"Check the loop-circuit wiring.","tags":["nothing found","no devices","end 1","end 2","loop"],"type":"fault","cat":"Fault Finder"},{"id":"fault-nvm-read-only","title":"NVM is read only","page":108,"associated":"NVM on backplane or MCB","meaning":"An attempt is being made to write to a hardware write-protected NVM.","action":"Remove the hardware write protect before writing.","tags":["nvm read only","hardware write protect"],"type":"fault","cat":"Fault Finder"},{"id":"fault-panel-powerup","title":"Panel powerup","page":108,"associated":"MCC / MCB","meaning":"Software reset of the system or a manual reset of Card 0.","action":"If an automatic reset has occurred, check for system errors.","tags":["panel powerup","reset","card 0","system errors"],"type":"fault","cat":"Fault Finder"},{"id":"fault-pointer-corrupt","title":"Pointer corrupted at card x","page":108,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["pointer corrupted","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-pointer-missing","title":"Pointer missing at card x","page":108,"associated":"Any Card","meaning":"Software error. Software errors will cause a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["pointer missing","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-printer-lost","title":"Printer lost / fitted at card x number y on loop z","page":108,"associated":"MCC / MCB / DAC / MRC","meaning":"The external printer has not been seen and is lost.","action":"Check the printer connections and check for a paper jam.","tags":["printer lost","paper jam","printer"],"type":"fault","cat":"Fault Finder"},{"id":"fault-program-memory","title":"Program memory corrupted at card x","page":108,"associated":"Any Card","meaning":"Checksum failure on FLASH at midnight.","action":"Clear and ignore a single occurrence. Record it in the log book.","tags":["program memory corrupted","checksum","flash"],"clearType":"Clearable","type":"fault","cat":"Fault Finder"},{"id":"fault-program-not-running","title":"Program not running at card x","page":109,"associated":"Any Card","meaning":"Problem with software; the watchdog will operate the MCC / MCB and an automatic system reset will occur.","action":"Ignore a single occurrence and record the event in the log book.","tags":["program not running","watchdog","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-program-runaway","title":"Program runaway at card x","page":109,"associated":"Any Card","meaning":"CPU has crashed.","action":"Clear and ignore a single occurrence. Record it in the log book.","tags":["program runaway","cpu crash"],"type":"fault","cat":"Fault Finder"},{"id":"fault-q-buffer-full","title":"Q buffer full at card x","page":109,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["q buffer full","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-q-buffer-number","title":"Q buffer number Failed at card x","page":109,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["q buffer failed","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-recover-failed","title":"Recover failed at card x","page":109,"associated":"LPC (loop processor card)","meaning":"The loop does not match what is stored in NVM.","action":"Check and confirm/correct the difference, then back up.","tags":["recover failed","nvm","loop mismatch","backup"],"clearType":"Clearable","type":"fault","cat":"Fault Finder"},{"id":"fault-wrong-device-type","title":"Replaced Device Wrong type number x on loop y","page":109,"associated":"LPC (loop processor card)","meaning":"The replacement device is a different type.","action":"Check and confirm the correct device type is installed, reallocate, then back up to memory.","tags":["replaced wrong type","device replacement","reallocate","backup"],"type":"fault","cat":"Fault Finder"},{"id":"fault-safe-not-set","title":"SAFE Address not Set up number x on loop y","page":109,"associated":"LPC (loop processor card)","meaning":"The replacement device is not SAFE addressed, but the previous device at that location was SAFE addressed.","action":"Set up the SAFE address.","tags":["safe not set","replacement","safe address"],"type":"fault","cat":"Fault Finder"},{"id":"fault-scan-error","title":"Scan error number x at card y","page":109,"associated":"LPC (loop processor card)","meaning":"Invalid universal scan reply.","action":"Check loop length and screening.","tags":["scan error","screening","loop length"],"type":"fault","cat":"Fault Finder"},{"id":"fault-sensor-faulty","title":"Sensor faulty","page":110,"associated":"LPC (loop processor card)","meaning":"On wireless systems, the sensor head may need cleaning or may be lost from a wireless base; the manual also states it can mean a fault pattern has been matched.","action":"Check and replace the sensor if necessary.","tags":["sensor faulty","wireless","cleaning","sensor head"],"type":"fault","cat":"Fault Finder"},{"id":"fault-sensor-out-spec","title":"Sensor out of specification number x on Loop y channel z","page":110,"associated":"LPC (loop processor card)","meaning":"A fault pattern has been matched.","action":"Check and replace the sensor if necessary.","tags":["sensor out of specification","sensor","fault pattern"],"type":"fault","cat":"Fault Finder"},{"id":"fault-shared-memory","title":"Shared memory hardware is faulty at card x","page":110,"associated":"Any Card","meaning":"There is an MCC / MCB problem.","action":"Replace all other cards first, other than the MCC/MCB, to see if the problem is resolved. If it persists, replace the MCC / MCB.","tags":["shared memory","hardware","mcc","mcb"],"type":"fault","cat":"Fault Finder"},{"id":"fault-slave-micro","title":"Slave micro failed at card x","page":110,"associated":"LPC (loop processor card)","meaning":"The loop driver is watchdogged by the loop processor.","action":"Reset and ignore a single occurrence. Record it in the log book.","tags":["slave micro failed","loop driver","watchdog"],"type":"fault","cat":"Fault Finder"},{"id":"fault-software-error","title":"Software error","page":110,"associated":"System","meaning":"Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["software error","system reset"],"type":"fault","cat":"Fault Finder"},{"id":"fault-sounder-circuit","title":"Sounder circuit failed","page":110,"associated":"Device","meaning":"There is a fault with the sounder hardware on the S-Cubed or S-Quad.","action":"Replace the device.","tags":["sounder circuit","s-cubed","s-quad"],"type":"fault","cat":"Fault Finder"},{"id":"fault-speech-circuit","title":"Speech circuit has failed","page":111,"associated":"Device","meaning":"There is a hardware fault possibly associated with the voice chip on the speech S-Cubed or S-Quad.","action":"Replace the device.","tags":["speech circuit","voice chip","s-cubed","s-quad"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-ack","title":"Spurious acknowledgment at card x","page":111,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["spurious acknowledgment","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-spurious-fab","title":"Spurious FAB number x on loop y","page":111,"associated":"LPC (loop processor card)","meaning":"The device has a FAB when it should not have one.","action":"Ignore a single occurrence; the panel will remove the indication.","tags":["spurious fab","fab","loop"],"type":"fault","cat":"Fault Finder"},{"id":"fault-stack-overflow","title":"Stack overflow at card x","page":111,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["stack overflow","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-stack-deep","title":"Stack too deep at card x","page":111,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["stack too deep","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-strobe-circuit","title":"Strobe circuit has failed","page":111,"associated":"Device","meaning":"The strobe circuit in the S-Quad or S-Cubed device has failed.","action":"Replace the device.","tags":["strobe circuit","vad","s-quad","s-cubed"],"type":"fault","cat":"Fault Finder"},{"id":"fault-system-stopped","title":"System stopped","page":112,"associated":"MCC / MCB","meaning":"The backplane link has been moved, causing the system to stop.","action":"The manual states the link should not normally be accessed.","tags":["system stopped","backplane link"],"type":"fault","cat":"Fault Finder"},{"id":"fault-task-stuck","title":"Task stuck at card x","page":112,"associated":"Any Card","meaning":"Software error. Software errors will activate a system reset.","action":"Ignore a single occurrence and record the event in the log book.","tags":["task stuck","software"],"type":"fault","cat":"Fault Finder"},{"id":"fault-too-many-device-errors","title":"Too many errors number x on loop y","page":112,"associated":"Device","meaning":"More than 15 errors from a device in 34 hours.","action":"Check the loop wiring to the device.","tags":["too many errors","device errors","34 hours","loop wiring"],"clearType":"Clearable","type":"fault","cat":"Fault Finder"},{"id":"fault-too-many-network-errors","title":"Too many errors x at Card y","page":112,"associated":"Network Card","meaning":"Up to 6 consecutive communication errors.","action":"Check wiring and cable screen. There may be faults with the installation.","tags":["too many network errors","screen","network wiring"],"type":"fault","cat":"Fault Finder"},{"id":"fault-unrecoverable-tx","title":"Unrecoverable Tx fault number x loop y","page":112,"associated":"LPC (loop processor card)","meaning":"More than 3 consecutive reply errors.","action":"Check the device connections and replace if necessary.","tags":["unrecoverable tx","transmission","reply errors","device connections"],"clearType":"Clearable","type":"fault","cat":"Fault Finder"},{"id":"fault-va-comms","title":"Voice Alarm comms failed — Port 1 / Node x","page":113,"associated":"Panel serial link","meaning":"There is a serial-link wiring fault between the Vigilon Plus panel Port 1 and DOM/Comprio.","action":"Check the serial link, including the DOM TWI connection, the two 9-way D-type connectors on the TWI-RS232 adapter, and Tx/Rx/0V wiring at the Vigilon Plus/Compact Plus panel.","tags":["voice alarm comms","dom","comprio","serial link","port 1"],"type":"fault","cat":"Fault Finder"},{"id":"fault-va-common","title":"Voice Alarm common fault Node x","page":113,"associated":"Connected D1 Voice Alarm system","meaning":"There is a common fault in the D1 Voice Alarm system, such as speaker line, amplifier or mains power fault.","action":"Find and rectify the cause in the D1 Voice Alarm system using its module user guides. The message/indications clear when the fault is rectified.","tags":["voice alarm common fault","d1","speaker","amplifier","mains"],"type":"fault","cat":"Fault Finder"},{"id":"fault-va-config","title":"Voice Alarm configuration fault Nos. 17","page":113,"associated":"D1 Voice Alarm System configuration","meaning":"The Vigilon panel is reporting a configuration fault in the D1 Voice Alarm system; the affected Virtual Output Point is not recognised.","action":"Confirm the displayed VOP is non-existent or incorrectly configured, rectify the configuration at Vigilon and/or D1, then repeat the test and confirm the fault clears.","tags":["voice alarm configuration","vop","d1","virtual output point"],"type":"fault","cat":"Fault Finder"},{"id":"fault-warm-restart","title":"Warm restart","page":114,"associated":"MCC / MCB","meaning":"The 5V rail has dipped and activated the watchdog, the MCC/MCB button has been pressed, or panel power has been reconnected.","action":"The manual gives no additional action for this message.","tags":["warm restart","5v","watchdog","power"],"type":"fault","cat":"Fault Finder"},{"id":"fault-wiring-ground-break","title":"Wiring changed - ground break at card x number y on loop z","page":114,"associated":"LPC (loop processor card)","meaning":"A test has shown a break on the 0V line. The test is conducted every minute.","action":"Check the 0V wiring around the loop.","tags":["ground break","0v break","wiring changed","open circuit"],"clearType":"Repairable","type":"fault","cat":"Fault Finder"},{"id":"fault-wiring-short","title":"Wiring changed - short at card x number y loop z","page":114,"associated":"LPC (loop processor card)","meaning":"Loop short circuit after the particular device.","action":"Check the wiring and device after the indicated device.","tags":["wiring changed short","short circuit","s/c","loop"],"type":"fault","cat":"Fault Finder"},{"id":"fault-wiring-split","title":"Wiring changed - split/closed at card x number y on loop z","page":114,"associated":"LPC (loop processor card)","meaning":"No reply has been received from a device at End-2 of the loop.","action":"Check the wiring.","tags":["loop split","split closed","open circuit","o/c","end 2","wiring changed"],"clearType":"Repairable","type":"fault","cat":"Fault Finder"},{"id":"fault-wiring-part-short","title":"Wiring changed part short at card x number y on loop z","page":114,"associated":"LPC (loop processor card)","meaning":"There is less than 80 ohms between the positive and 0V loop wiring.","action":"Check the wiring and the device after the partially shorted device.","tags":["part short","partial short","80 ohms","loop wiring"],"type":"fault","cat":"Fault Finder"},{"id":"fault-wrong-card","title":"Wrong card type at Card x","page":114,"associated":"Any Card","meaning":"A card is in the wrong slot.","action":"Move the cards to the correct locations.","tags":["wrong card type","wrong slot","card"],"type":"fault","cat":"Fault Finder"}];
+
+const guidedFlows = [{"id":"flow-tx","title":"Guided Flow - Transmission (TX) Fault","page":9,"cat":"Guided Fault Flows","type":"flow","tags":["tx fault","transmission","device x","resistance","capacitance","loop card","psu"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Replace device and allocate loop.","next":"q1"},"q1":{"kind":"question","text":"Is TX fault still present?","yes":"s2","no":"ok"},"s2":{"kind":"action","text":"Check wiring between Device 'x' and 'x+1' for:\n1. Partial short circuit\n2. Partial earth fault\n3. Poor earth continuity/bonding/screening\n4. Water ingress","next":"q2"},"q2":{"kind":"question","text":"Wiring OK?","yes":"s3","no":"repair"},"repair":{"kind":"action","text":"Repair/replace faulty wiring.","next":"ok"},"s3":{"kind":"action","text":"Measure loop resistance and capacitance.","next":"q3"},"q3":{"kind":"question","text":"Is R > 15 ohms? / C > 1 microF?","yes":"rewire","no":"card"},"rewire":{"kind":"advice","text":"Investigate / Consider how to split/re-wire the loop to reduce resistance & capacitance values."},"card":{"kind":"action","text":"Exchange Loop Card & Allocate Loop.","next":"q4"},"q4":{"kind":"question","text":"TX fault still present?","yes":"psu","no":"ok"},"psu":{"kind":"advice","text":"Consider replacing PSU."},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-short","title":"Guided Flow - Short Circuit Fault","page":10,"cat":"Guided Fault Flows","type":"flow","tags":["short circuit","s/c","sc","loop short","polarity","insulation","earth fault","device x"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Disconnect incoming (L1) at device 'x' and re-allocate loop.","next":"q1"},"q1":{"kind":"question","text":"Is there still a S/C at device 'x' upon allocation?","yes":"s2","no":"polarity"},"s2":{"kind":"action","text":"Disconnect cable between device 'x' and 'x+1'. Check cable for insulation between cores.","next":"q2"},"q2":{"kind":"question","text":"Is there a S/C between cores?","yes":"replaceCable1","no":"earthCheck"},"replaceCable1":{"kind":"action","text":"Replace cable.","next":"allocate"},"earthCheck":{"kind":"action","text":"Check for earth faults on conductors.","next":"q3"},"q3":{"kind":"question","text":"Is there a +ve earth fault?","yes":"replaceCable2","no":"reconnect"},"replaceCable2":{"kind":"action","text":"Replace cable.","next":"allocate"},"reconnect":{"kind":"action","text":"Re-connect cable & re-allocate loop.","next":"q4"},"q4":{"kind":"question","text":"Is there still a S/C at device 'x'?","yes":"replaceX","no":"ok"},"replaceX":{"kind":"action","text":"Replace device 'x'.","next":"allocate"},"polarity":{"kind":"action","text":"Check polarity of incoming cable (L1) at device 'x+1'.","next":"q5"},"q5":{"kind":"question","text":"Is polarity correct?","yes":"replaceX1","no":"correctPolarity"},"replaceX1":{"kind":"action","text":"Replace device 'x+1'.","next":"allocate"},"correctPolarity":{"kind":"action","text":"Correct polarity then re-connect cable.","next":"allocate"},"allocate":{"kind":"action","text":"Allocate Loop.","next":"q1"},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-split","title":"Guided Flow - Loop Split (O/C) Fault","page":11,"cat":"Guided Fault Flows","type":"flow","tags":["loop split","o/c","open circuit","find device","digital output 4","device x","device x+1"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Identify device x using find device of digital output 4.","next":"q1"},"q1":{"kind":"question","text":"Are devices x & x+1 plugged in correctly?","yes":"q2","no":"fit"},"fit":{"kind":"action","text":"Fit device correctly & re-allocate.","next":"qfit"},"qfit":{"kind":"question","text":"Is loop still split?","yes":"q2","no":"ok"},"q2":{"kind":"question","text":"Is there loop voltage @ device x+1?","yes":"replace1","no":"q3"},"replace1":{"kind":"action","text":"Replace device x+1 and re-allocate.","next":"qrep1"},"qrep1":{"kind":"question","text":"Is loop still split?","yes":"q3","no":"ok"},"q3":{"kind":"question","text":"Is there loop voltage End 2 of dev x?","yes":"replace2","no":"cable"},"replace2":{"kind":"action","text":"Replace device x+1 & re-allocate.","next":"qrep2"},"qrep2":{"kind":"question","text":"Is loop still split?","yes":"cable","no":"ok"},"cable":{"kind":"action","text":"Check connections/cable between devices x & x+1.","next":"q4"},"q4":{"kind":"question","text":"Is wiring ok?","yes":"allocate","no":"repair"},"allocate":{"kind":"action","text":"Allocate loop.","next":"ok"},"repair":{"kind":"advice","text":"Repair/replace faulty wiring."},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-double","title":"Guided Flow - Double Allocation","page":12,"cat":"Guided Fault Flows","type":"flow","tags":["double allocation","double allocated","duplicate address","loop breaker","percussive tuning","l1","l2"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Re-Allocate loop.","next":"q1"},"q1":{"kind":"question","text":"Double allocation still present?","yes":"identify","no":"ok"},"identify":{"kind":"action","text":"Identify devices x & x+1.","next":"percussive"},"percussive":{"kind":"advice","text":"Percussive tuning on device to confirm loop breaker not stuck.","next":"q2"},"q2":{"kind":"question","text":"Double allocation still present?","yes":"wiring","no":"ok"},"wiring":{"kind":"action","text":"Check wiring @ device x and x+1 for valid connections (L1 & L2 not reversed).","next":"q3"},"q3":{"kind":"question","text":"Connections correct?","yes":"q4","no":"rectify"},"rectify":{"kind":"action","text":"Rectify.","next":"q4"},"q4":{"kind":"question","text":"Double allocation still present?","yes":"replace","no":"ok"},"replace":{"kind":"advice","text":"Replace device."},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-earth","title":"Guided Flow - Earth Fault","page":13,"cat":"Guided Fault Flows","type":"flow","tags":["earth fault","psu","earth reading","earth monitor","positive earth","negative earth","+ve","-ve"],"start":"s1","reference":{"headers":["Panel","Mns","DC","Bt1","BC1","Bt2","BC2","MA1","MA2","Ear","LpV"],"rows":[["4-6 loop","214","141","206","206","0","0","127","74","60","221"],["2 loop","206","138","200","203","0","0","74","74","65","197"]],"note":"PSU interpretation values shown on Help Sheet p.13. To check PSU readings: Test/Eng -> Test -> PSU."},"nodes":{"s1":{"kind":"action","text":"Check PSU Readings.","next":"q1"},"q1":{"kind":"question","text":"Is earth reading fluctuating?","yes":"intermittent","no":"q2"},"intermittent":{"kind":"action","text":"Intermittent earth fault.","next":"locate"},"q2":{"kind":"question","text":"Is reading still >70 (Rising to 80)?","yes":"positive","no":"q3"},"positive":{"kind":"action","text":"+ve earth fault.","next":"locate"},"locate":{"kind":"action","text":"Check wiring from I/O lines if intermittent fault, otherwise, use successive approximation (split the loop).","next":"io"},"io":{"kind":"action","text":"I/O lines ok.","next":"jumpShort"},"jumpShort":{"kind":"jump","text":"Proceed as per Loop S/C.","target":"flow-short","button":"Open Short Circuit flow"},"q3":{"kind":"question","text":"Is reading <70 (falling to 50)?","yes":"jumpNeg","no":"ok"},"jumpNeg":{"kind":"jump","text":"-ve earth fault - refer to -ve earth fault sheet.","target":"flow-neg-earth","button":"Open -ve Earth Fault flow"},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-neg-earth","title":"Guided Flow - -ve Earth Fault","page":14,"cat":"Guided Fault Flows","type":"flow","tags":["negative earth","-ve earth","earth fault","0v to earth","successive approximation","loop splitting","interface","repeater","mimic"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Check loop resistance End 1 to End 2 on 0v.","next":"s2"},"s2":{"kind":"action","text":"Measure 0v to Earth on End 1 & End 2. Earth fault is nearer the lowest value.","next":"s3"},"s3":{"kind":"action","text":"Check 0v to earth on loop wiring using successive approximation (Loop splitting) to identify cable or device.","next":"q1"},"q1":{"kind":"question","text":"Has faulty cable been identified?","yes":"replaceCable","no":"device"},"replaceCable":{"kind":"advice","text":"Replace Cable."},"device":{"kind":"action","text":"If cables are ok, earth fault may be on a device.","next":"q2"},"q2":{"kind":"question","text":"Is device an interface?","yes":"io","no":"q3"},"io":{"kind":"action","text":"Check for fault on I/O line wiring.","next":"thirdParty"},"thirdParty":{"kind":"action","text":"Use successive approximation (Loop splitting) to identify 3rd party device or cable.","next":"replaceDeviceCable"},"replaceDeviceCable":{"kind":"advice","text":"Replace device or cable."},"q3":{"kind":"question","text":"Is device a repeat or mimic panel?","yes":"internal","no":"replaceX"},"internal":{"kind":"action","text":"Check internally for -ve Earth.","next":"q4"},"q4":{"kind":"question","text":"Is cause found & corrected?","yes":"ok","no":"replaceX"},"replaceX":{"kind":"advice","text":"Replace device 'x'."},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-ground-break","title":"Guided Flow - Ground Break","page":15,"cat":"Guided Fault Flows","type":"flow","tags":["ground break","card x","end 2","0v","device x","device x+1","sheath","l1"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Remove End 2 0v and re-allocate.","next":"s2"},"s2":{"kind":"action","text":"Loop will stop at device before location of Ground Break (Dev 'x').","next":"s3"},"s3":{"kind":"action","text":"Remove device x+1. Check for damage, disconnection, connection on sheath on incoming (L1) terminal.","next":"q1"},"q1":{"kind":"question","text":"Is wiring faulty or damaged?","yes":"repair","no":"checkDevice"},"checkDevice":{"kind":"advice","text":"Check device."},"repair":{"kind":"advice","text":"Re-connect/repair cable.","next":"refit"},"refit":{"kind":"action","text":"Re-fit device to the base.","next":"reconnect"},"reconnect":{"kind":"action","text":"Re-connect End 2 0v and re-allocate.","next":"ok"},"ok":{"kind":"ok","text":"All OK"}}},{"id":"flow-hardware","title":"Guided Flow - Hardware Fault","page":16,"cat":"Guided Fault Flows","type":"flow","tags":["hardware fault","hw fault","device x","led","sensor","mcp","allocate","partial short"],"start":"s1","nodes":{"s1":{"kind":"action","text":"Identify device (LED should be illuminated if sensor or MCP).","next":"q1"},"q1":{"kind":"question","text":"Is device plugged in correctly?","yes":"allocate1","no":"fit"},"fit":{"kind":"advice","text":"Fit device correctly."},"allocate1":{"kind":"action","text":"Allocate loop.","next":"q2"},"q2":{"kind":"question","text":"Hardware fault still present?","yes":"replace","no":"ok"},"replace":{"kind":"advice","text":"Replace device 'x'.","next":"allocate2"},"allocate2":{"kind":"action","text":"Allocate loop.","next":"q3"},"q3":{"kind":"question","text":"Is hardware fault still present?","yes":"checkSC","no":"ok"},"checkSC":{"kind":"advice","text":"Check for S/C or partial S/C after device 'x'. Repeat with device 'x+1' disconnected."},"ok":{"kind":"ok","text":"All OK"}}}];
+
+const categoryCodes = {
+  'Guided Fault Flows':'GF','Fault Finder':'FF','Diagnostics':'DI','Find Devices':'FD','Disable / Enable':'DE','Fault Clearing':'FC','SAFE Addressing':'SA',
+  'Loop Management':'LM','Device Replacement':'DR','Panel Setup':'PS','Backup / Restore':'BR','Zones / Cause & Effect':'ZE',
+  'Sectors':'SE','Phased Evac':'PE','Sensor States':'SS','Command Builds':'CB'
+};
+
+const allItems = [...guidedFlows, ...faults, ...procedures];
+
+const quickTasks = [
+  ['device-status','Device Status','Interrogate device'],
+  ['find-device','Find Device','Locate a device'],
+  ['disable-sector','Isolate Sector','Disable / enable sector'],
+  ['allocate-loop','Re-Allocate Loop','Run loop allocation'],
+  ['loop-repair','Loop Repair','Repair loop after fault'],
+  ['nvm-backup','NVM Backup','Back up cards 0–15']
+];
+
+const quickCats = [
+  ['Fault Finder','Gent Appendix B messages'],
+  ['Guided Fault Flows','Tap-through fault finding'],
+  ['Diagnostics','Status, logs & loop map'],
+  ['Find Devices','LED & Find Dev'],
+  ['Disable / Enable','Safe isolations'],
+  ['Loop Management','Stop, allocate & repair'],
+  ['SAFE Addressing','SAFE / soft addressing'],
+  ['Device Replacement','Like-for-like process'],
+  ['Backup / Restore','NVM & SD card'],
+  ['Sectors','Cause & effect basics'],
+  ['Phased Evac','Delay block example'],
+  ['Sensor States','Permanent & timed states'],
+  ['Command Builds','Custom controls'],
+  ['Zones / Cause & Effect','Zones, tasks & walk test']
+];
+
+// Curated cross-links only. These connect existing source-controlled items; they do not add new diagnostic advice.
+const relatedMap = {
+  'device-status':['find-device','loop-map','condition-codes'],
+  'condition-codes':['device-status','find-device'],
+  'replace-safe':['unsafe','stop-loop','allocate-loop','resafe'],
+  'replace-soft':['stop-loop','allocate-loop'],
+  'loop-repair':['loop-map','device-status'],
+  'nvm-backup':['nvm-unprotect','nvm-protect'],
+  'fault-allocation-double':['flow-double','device-status','loop-map','allocate-loop'],
+  'fault-allocation-hw':['flow-hardware','find-device','device-status','allocate-loop'],
+  'fault-allocation-map':['loop-map','allocate-loop'],
+  'fault-allocation-tx':['flow-tx','device-status','find-device','loop-map','allocate-loop'],
+  'fault-device-replaced-faulty':['replace-safe','replace-soft','device-status','allocate-loop'],
+  'fault-duplicate-safe':['unsafe','resafe','device-status','allocate-loop'],
+  'fault-earth':['flow-earth','psu-readings'],
+  'fault-earth-card':['flow-earth','psu-readings','loop-map'],
+  'fault-excessive-tx-errors':['flow-tx','flow-loop-split','device-status','loop-map'],
+  'fault-interface-oc':['device-status','find-device'],
+  'fault-interface-sc':['flow-short','device-status'],
+  'fault-loop-map-changed':['loop-map','nvm-backup'],
+  'fault-loop-high-res':['device-status','loop-map'],
+  'fault-loop-high-res-neg':['device-status','loop-map','flow-neg-earth'],
+  'fault-loop-reply-marginal':['device-status','loop-map'],
+  'fault-loop-stopped':['allocate-loop','loop-map'],
+  'fault-lost-device':['device-status','find-device','loop-map','allocate-loop'],
+  'fault-recover-failed':['loop-map','nvm-backup','allocate-loop'],
+  'fault-safe-not-set':['resafe','device-status'],
+  'fault-too-many-device-errors':['device-status','loop-map','flow-tx'],
+  'fault-unrecoverable-tx':['flow-tx','device-status','find-device','loop-map'],
+  'fault-wiring-ground-break':['flow-ground-break','loop-repair','loop-map'],
+  'fault-wiring-short':['flow-short','loop-map','allocate-loop'],
+  'fault-wiring-split':['flow-loop-split','loop-map','loop-repair'],
+  'fault-wiring-part-short':['flow-short','loop-map'],
+  'flow-tx':['fault-allocation-tx','fault-unrecoverable-tx','device-status','loop-map'],
+  'flow-short':['fault-wiring-short','loop-map','allocate-loop'],
+  'flow-loop-split':['fault-wiring-split','loop-map','loop-repair'],
+  'flow-double':['fault-allocation-double','allocate-loop','loop-map'],
+  'flow-earth':['fault-earth','psu-readings','flow-neg-earth'],
+  'flow-neg-earth':['fault-earth-card','loop-map'],
+  'flow-ground-break':['fault-wiring-ground-break','loop-repair'],
+  'flow-hardware':['fault-allocation-hw','find-device','allocate-loop']
+};
+
+
+let activeCategory = 'All';
+let query = '';
+const favs = new Set(JSON.parse(localStorage.getItem('gentVigilonFavs') || '[]'));
+let recentIds = JSON.parse(localStorage.getItem('gentVigilonRecent') || '[]').filter(id=>allItems.some(x=>x.id===id)).slice(0,8);
+
+const $ = s => document.querySelector(s);
+const resultsEl = $('#results');
+const filtersEl = $('#filters');
+const quickGrid = $('#quickGrid');
+const quickTasksGrid = $('#quickTasksGrid');
+const homeFavPanel = $('#homeFavPanel');
+const homeFavGrid = $('#homeFavGrid');
+const recentPanel = $('#recentPanel');
+const recentGrid = $('#recentGrid');
+const searchEl = $('#search');
+const countText = $('#countText');
+const toastEl = $('#toast');
+const modalBackdrop = $('#modalBackdrop');
+const modalTitle = $('#modalTitle');
+const modalBody = $('#modalBody');
+let deferredInstallPrompt = null;
+
+function escapeHtml(s=''){
+  return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+function searchable(p){
+  return [p.title,p.cat,p.associated||'',p.meaning||'',p.action||'',p.clearType||'',(p.tags||[]).join(' '),(p.path||[]).join(' '),(p.list||[]).join(' '),p.note||'',JSON.stringify(p.nodes||{}),JSON.stringify(p.reference||{})].join(' ').toLowerCase();
+}
+
+function highlight(s){
+  const safe = escapeHtml(s);
+  const q = query.trim();
+  if(!q) return safe;
+  const terms = q.split(/\s+/).filter(Boolean).sort((a,b)=>b.length-a.length).map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  if(!terms.length) return safe;
+  return safe.replace(new RegExp('('+terms.join('|')+')','ig'), '<mark>$1</mark>');
+}
+
+function itemText(p){
+  if(p.type==='flow'){
+    const lines = [`${p.title}`, `Source: Gent Vigilon Help Sheet, page ${p.page}`];
+    Object.values(p.nodes||{}).forEach(n=>lines.push(n.text));
+    return lines.join('\n');
+  }
+  if(p.type==='fault'){
+    let out = `${p.title}\nSource: Gent Generic Commissioning Instructions, Appendix B, page ${p.page}\nAssociated with: ${p.associated}\nMeaning: ${p.meaning}\nInitial action: ${p.action}`;
+    if(p.clearType) out += `\nFault class: ${p.clearType}`;
+    return out;
+  }
+  let out = `${p.title}\nSource: Gent Vigilon Help Sheet, page ${p.page}\n`;
+  if(p.path) out += p.path.join(' → ') + '\n';
+  if(p.list) out += p.list.map((x,i)=>`${i+1}. ${x}`).join('\n') + '\n';
+  if(p.note) out += p.note;
+  return out.trim();
+}
+
+function itemSourceShort(p){
+  if(p.type==='fault') return `Fault • Manual p.${p.page}`;
+  if(p.type==='flow') return `Guided flow • p.${p.page}`;
+  return `${p.cat} • p.${p.page}`;
+}
+
+function openItemById(id){
+  const p = allItems.find(x=>x.id===id);
+  if(!p) return;
+  activeCategory = 'All';
+  query = '';
+  searchEl.value = '';
+  renderFilters();
+  renderResults();
+  requestAnimationFrame(()=>{
+    const card = resultsEl.querySelector(`details[data-id="${id}"]`);
+    if(card){
+      card.open = true;
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  });
+}
+
+function recordRecent(id){
+  recentIds = [id, ...recentIds.filter(x=>x!==id)].slice(0,8);
+  localStorage.setItem('gentVigilonRecent', JSON.stringify(recentIds));
+  renderHomePanels();
+}
+
+function miniButton(p){
+  return `<button class="mini" data-open-item="${p.id}" type="button"><strong>${escapeHtml(p.title)}</strong><small>${escapeHtml(itemSourceShort(p))}</small></button>`;
+}
+
+function renderHomePanels(){
+  quickTasksGrid.innerHTML = quickTasks.map(([id,title,desc])=>`<button class="quick task" data-open-item="${id}" type="button"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(desc)}</small></button>`).join('');
+
+  const favItems = [...favs].map(id=>allItems.find(x=>x.id===id)).filter(Boolean).slice(0,6);
+  homeFavPanel.hidden = !favItems.length;
+  homeFavGrid.innerHTML = favItems.map(miniButton).join('');
+
+  const recentItems = recentIds.map(id=>allItems.find(x=>x.id===id)).filter(Boolean).slice(0,6);
+  recentPanel.hidden = !recentItems.length;
+  recentGrid.innerHTML = recentItems.map(miniButton).join('');
+}
+
+document.addEventListener('click',e=>{
+  const btn = e.target.closest('[data-open-item]');
+  if(btn) openItemById(btn.dataset.openItem);
+});
+
+function renderQuick(){
+  quickGrid.innerHTML = quickCats.map(([cat,desc]) => `
+    <button class="quick" data-cat="${escapeHtml(cat)}" type="button">
+      <strong>${escapeHtml(cat)}</strong><small>${escapeHtml(desc)}</small>
+    </button>`).join('');
+  quickGrid.querySelectorAll('.quick').forEach(btn=>btn.addEventListener('click',()=>{
+    activeCategory = btn.dataset.cat;
+    renderFilters(); renderResults();
+    $('#proceduresHeading')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+}
+
+function renderFilters(){
+  const cats = ['All','Favourites',...new Set(allItems.map(p=>p.cat))];
+  filtersEl.innerHTML = cats.map(cat=>`<button type="button" class="filter ${cat===activeCategory?'active':''}" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`).join('');
+  filtersEl.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
+    activeCategory = btn.dataset.cat; renderFilters(); renderResults();
+  }));
+}
+
+
+const flowStates = {};
+
+function referenceTable(p){
+  if(!p.reference) return '';
+  const h = p.reference.headers.map(x=>`<th>${escapeHtml(x)}</th>`).join('');
+  const rows = p.reference.rows.map(r=>`<tr>${r.map(x=>`<td>${escapeHtml(x)}</td>`).join('')}</tr>`).join('');
+  return `<div class="note"><strong>PSU reference:</strong> ${escapeHtml(p.reference.note)}</div><div class="ref-table-wrap"><table class="ref-table"><thead><tr>${h}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function flowNodeHtml(flow, state){
+  const node = flow.nodes[state.current];
+  if(!node) return '';
+  const labels = {action:'Step',question:'Decision',advice:'Action / check',ok:'Result',jump:'Related flow'};
+  let controls = '';
+  if(node.kind==='question'){
+    controls += `<button class="flow-btn yes" data-flow-action="yes" data-flow-id="${flow.id}" type="button">Yes</button><button class="flow-btn no" data-flow-action="no" data-flow-id="${flow.id}" type="button">No</button>`;
+  } else if(node.kind==='jump'){
+    controls += `<button class="flow-btn primary" data-flow-action="jump" data-flow-id="${flow.id}" data-flow-target="${node.target}" type="button">${escapeHtml(node.button||'Open related flow')}</button>`;
+  } else if(node.next){
+    controls += `<button class="flow-btn primary" data-flow-action="next" data-flow-id="${flow.id}" type="button">Continue</button>`;
+  }
+  if(state.history.length) controls += `<button class="flow-btn" data-flow-action="back" data-flow-id="${flow.id}" type="button">Back</button>`;
+  controls += `<button class="flow-btn" data-flow-action="restart" data-flow-id="${flow.id}" type="button">Restart</button>`;
+  return `<div class="flow-node ${escapeHtml(node.kind)}"><div class="flow-kicker">${labels[node.kind]||'Step'}</div><div class="flow-text">${escapeHtml(node.text)}</div><div class="flow-controls">${controls}</div></div><div class="flow-history">Step ${state.history.length+1} • Help Sheet p.${flow.page}</div>`;
+}
+
+function startFlow(id){
+  const flow = guidedFlows.find(f=>f.id===id);
+  if(!flow) return;
+  flowStates[id] = {current:flow.start,history:[]};
+  renderFlowInto(id);
+}
+function renderFlowInto(id){
+  const flow = guidedFlows.find(f=>f.id===id);
+  const runner = resultsEl.querySelector(`[data-flow-runner="${id}"]`);
+  if(!flow || !runner) return;
+  const state = flowStates[id] || (flowStates[id]={current:flow.start,history:[]});
+  runner.innerHTML = flowNodeHtml(flow,state);
+}
+function moveFlow(id,target){
+  const flow = guidedFlows.find(f=>f.id===id); const state=flowStates[id];
+  if(!flow||!state||!target) return;
+  state.history.push(state.current); state.current=target; renderFlowInto(id);
+}
+function openRelatedFlow(id){
+  activeCategory='Guided Fault Flows'; query=''; searchEl.value=''; renderFilters(); renderResults();
+  requestAnimationFrame(()=>{
+    const card=resultsEl.querySelector(`details[data-id="${id}"]`);
+    if(card){card.open=true;startFlow(id);card.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+}
+
+function sourceInfo(p){
+  if(p.type==='fault') return {doc:'Gent Generic Commissioning Instructions', detail:`Issue 9 • Appendix B • PDF page ${p.page}`, file:'Gent_Vigilon_Generic_Commissioning_Manual.pdf'};
+  if(p.type==='flow') return {doc:'Gent Vigilon Help Sheet', detail:`Fault Finding Flow Chart • PDF page ${p.page}`, file:'Gent_Vigilon_Help_Sheet.pdf'};
+  return {doc:'Gent Vigilon Help Sheet', detail:`PDF page ${p.page}`, file:'Gent_Vigilon_Help_Sheet.pdf'};
+}
+
+function relatedHtml(p){
+  const ids = relatedMap[p.id] || [];
+  const items = ids.map(id=>allItems.find(x=>x.id===id)).filter(Boolean);
+  if(!items.length) return '';
+  return `<div class="related"><div class="label">Related items</div><div class="related-links">${items.map(x=>`<button class="related-link" type="button" data-open-item="${escapeHtml(x.id)}">${escapeHtml(x.title)}</button>`).join('')}</div></div>`;
+}
+
+function showModal(title, html){
+  modalTitle.textContent = title;
+  modalBody.innerHTML = html;
+  modalBackdrop.classList.add('show');
+  modalBackdrop.setAttribute('aria-hidden','false');
+}
+function closeModal(){
+  modalBackdrop.classList.remove('show');
+  modalBackdrop.setAttribute('aria-hidden','true');
+}
+function openSourceModal(id){
+  const p = allItems.find(x=>x.id===id); if(!p) return;
+  const si = sourceInfo(p);
+  showModal('Source', `<div class="fact"><strong>${escapeHtml(si.doc)}</strong><br>${escapeHtml(si.detail)}</div><p>This item is based only on the supplied source shown above. The source PDFs are intentionally not included in this public GitHub Pages build. Keep your original PDFs locally for verification.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
+}
+function openReferenceModal(){
+  showModal('Reference information', `<div class="fact"><strong>App content basis</strong><br>Gent Vigilon Help Sheet + Gent Generic Commissioning Instructions.</div><div class="fact"><strong>Gent manual</strong><br>Issue 9 • 05/17 • Generic Vigilon Plus & Compact Plus commissioning instructions.</div><div class="fact"><strong>Manual scope</strong><br>The manual states it covers Vigilon Plus 4/6-loop panels, Vigilon Compact Plus panels and Vigilon Plus Network Nodes with MCC/MCB software version 4.54 or higher.</div><p>No AI-generated diagnosis or outside fault guidance is included in the app. Fault meanings and initial actions are taken from Appendix B; procedures and guided flows are taken from the supplied help sheet.</p><p><strong>Public web build:</strong> the source PDFs are not included. Keep your original copies locally.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
+}
+
+function renderCard(p){
+  const isFav = favs.has(p.id);
+  let body = '';
+  if(p.type==='flow'){
+    body += `<div class="flow-shell"><div class="flow-intro"><strong>Guided version of the original help-sheet flowchart.</strong> No extra troubleshooting steps have been added. Where the original chart ends at an action, this guided flow ends there too.</div>${referenceTable(p)}<button class="action" data-flow-action="start" data-flow-id="${p.id}" type="button">Start guided flow</button><div class="flow-runner" data-flow-runner="${p.id}"></div></div>`;
+    body += `<div class="source-line">Source: Gent Vigilon Help Sheet • Fault Finding Flow Chart • p.${p.page}</div>`;
+  } else if(p.type==='fault'){
+    body += `<div class="fault-grid">
+      <div class="faultbox"><div class="label">Associated with</div><div>${highlight(p.associated)}</div></div>
+      <div class="faultbox"><div class="label">Meaning</div><div>${highlight(p.meaning)}</div></div>
+      <div class="faultbox actionbox"><div class="label">Gent initial action</div><div>${highlight(p.action)}</div></div>
+    </div>`;
+    if(p.clearType){
+      const msg = p.clearType==='Latching' ? 'Appendix B states latching fault events are cleared by re-allocating the loop circuit.' : p.clearType==='Repairable' ? 'Appendix B describes repairable faults as requiring manual intervention and the panel Loop → Repair command.' : 'Appendix B identifies this as a clearable fault event; if the fault is still current it will reappear after clearing.';
+      body += `<div class="note ${p.clearType==='Repairable'?'critical':''}"><strong>${escapeHtml(p.clearType)} fault:</strong> ${escapeHtml(msg)}</div>`;
+    }
+    body += `<div class="source-line">Source: Gent Generic Commissioning Instructions • Appendix B • p.${p.page}</div>`;
+  } else {
+    if(p.path){
+      body += `<div class="label">Panel path</div><div class="path">${p.path.map((x,i)=>`${i?'<span class="arrow">→</span>':''}<span class="step">${highlight(x)}</span>`).join('')}</div>`;
+    }
+    if(p.list){
+      body += `<div class="label">Steps / guidance from help sheet</div><ol class="substeps">${p.list.map(x=>`<li>${highlight(x)}</li>`).join('')}</ol>`;
+    }
+    if(p.note){
+      body += `<div class="note ${p.critical?'critical':''}">${highlight(p.note)}</div>`;
+    }
+    body += `<div class="source-line">Source: Gent Vigilon Help Sheet • p.${p.page}</div>`;
+  }
+  body += relatedHtml(p);
+  body += `<div class="card-actions"><button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy ${p.type==='fault'?'fault guidance':p.type==='flow'?'flow text':'procedure'}</button><button class="action print" type="button">Print</button></div>`;
+  const sourceMeta = p.type==='fault' ? `Gent Manual p.${p.page}` : p.type==='flow' ? `Help Sheet flow p.${p.page}` : `Help Sheet p.${p.page}`;
+  return `<details class="card" data-id="${p.id}">
+    <summary>
+      <div class="badge">${categoryCodes[p.cat]||'VG'}</div>
+      <div class="summary-text"><h3>${highlight(p.title)}</h3><div class="meta"><span>${escapeHtml(p.cat)}</span><span>•</span><span>${sourceMeta}</span>${p.clearType?`<span>•</span><span>${escapeHtml(p.clearType)}</span>`:''}</div></div>
+      <button class="fav ${isFav?'on':''}" data-fav="${p.id}" type="button" aria-label="Favourite" title="Favourite">${isFav?'★':'☆'}</button>
+    </summary>
+    <div class="content">${body}</div>
+  </details>`;
+}
+
+function renderResults(){
+  const q = query.trim().toLowerCase();
+  const filtered = allItems.filter(p=>{
+    const catOk = activeCategory==='All' || (activeCategory==='Favourites' ? favs.has(p.id) : p.cat===activeCategory);
+    const qOk = !q || q.split(/\s+/).every(term=>searchable(p).includes(term));
+    return catOk && qOk;
+  });
+  countText.textContent = `${filtered.length} of ${allItems.length}`;
+  resultsEl.innerHTML = filtered.length ? filtered.map(renderCard).join('') : `<div class="empty"><strong>No match found.</strong><br>Try a shorter search such as “tx”, “short circuit”, “loop split”, “earth”, “lost device”, “SAFE” or “NVM”.</div>`;
+
+  resultsEl.querySelectorAll('[data-fav]').forEach(btn=>btn.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();
+    const id = btn.dataset.fav;
+    favs.has(id) ? favs.delete(id) : favs.add(id);
+    localStorage.setItem('gentVigilonFavs', JSON.stringify([...favs]));
+    renderHomePanels();
+    renderResults();
+  }));
+
+  resultsEl.querySelectorAll('details.card').forEach(card=>card.addEventListener('toggle',()=>{
+    if(card.open) recordRecent(card.dataset.id);
+  }));
+
+  resultsEl.querySelectorAll('.source-btn').forEach(btn=>btn.addEventListener('click',()=>openSourceModal(btn.dataset.sourceId)));
+
+  resultsEl.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{
+    const p = allItems.find(x=>x.id===btn.dataset.id);
+    try{await navigator.clipboard.writeText(itemText(p)); showToast(p.type==='fault'?'Fault guidance copied':p.type==='flow'?'Flow text copied':'Procedure copied');}
+    catch{showToast('Copy is blocked in this browser');}
+  }));
+  resultsEl.querySelectorAll('.print').forEach(btn=>btn.addEventListener('click',()=>window.print()));
+}
+
+
+resultsEl.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-flow-action]');
+  if(!btn) return;
+  const id=btn.dataset.flowId, action=btn.dataset.flowAction;
+  const flow=guidedFlows.find(f=>f.id===id);
+  if(!flow) return;
+  if(action==='start' || action==='restart'){ startFlow(id); return; }
+  if(action==='jump'){ openRelatedFlow(btn.dataset.flowTarget); return; }
+  const state=flowStates[id] || (flowStates[id]={current:flow.start,history:[]});
+  const node=flow.nodes[state.current];
+  if(action==='back'){
+    const prev=state.history.pop(); if(prev){state.current=prev;renderFlowInto(id);} return;
+  }
+  if(action==='next'){ moveFlow(id,node.next); return; }
+  if(action==='yes' || action==='no'){ moveFlow(id,node[action]); return; }
+});
+
+function showToast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(showToast.t); showToast.t = setTimeout(()=>toastEl.classList.remove('show'),1600);
+}
+
+searchEl.addEventListener('input',()=>{query=searchEl.value; renderResults();});
+$('#clearSearch').addEventListener('click',()=>{searchEl.value='';query='';searchEl.focus();renderResults();});
+
+const savedTheme = localStorage.getItem('gentVigilonTheme');
+if(savedTheme==='dark') document.documentElement.dataset.theme='dark';
+function updateThemeButton(){ $('#themeBtn').textContent = document.documentElement.dataset.theme==='dark' ? 'Light mode' : 'Dark mode'; }
+$('#themeBtn').addEventListener('click',()=>{
+  const dark = document.documentElement.dataset.theme==='dark';
+  document.documentElement.dataset.theme = dark ? '' : 'dark';
+  localStorage.setItem('gentVigilonTheme', dark ? 'light' : 'dark');
+  updateThemeButton();
+});
+
+$('#referenceBtn').addEventListener('click', openReferenceModal);
+$('#modalClose').addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click',e=>{ if(e.target===modalBackdrop || e.target.closest('[data-modal-close]')) closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  $('#installBtn').hidden = false;
+});
+$('#installBtn').addEventListener('click', async()=>{
+  if(!deferredInstallPrompt){
+    showModal('Install app', '<p>Open this app from its HTTPS web address in your phone browser, then use the browser option to <strong>Add to Home screen</strong> / <strong>Install app</strong>.</p><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  $('#installBtn').hidden = true;
+});
+window.addEventListener('appinstalled',()=>{ $('#installBtn').hidden=true; showToast('App installed'); });
+
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+
+renderHomePanels(); renderQuick(); renderFilters(); renderResults(); updateThemeButton();
+</script>
+</body>
+</html>
