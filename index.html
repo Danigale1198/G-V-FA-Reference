@@ -240,6 +240,39 @@
       .scope-filter{padding:7px 10px}
       .results-header{align-items:flex-start;flex-direction:column;gap:2px}
     }
+
+    /* v6.1 usability refinements */
+    .update-banner{max-width:1120px;margin:-4px auto 14px;background:var(--ok);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:14px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 3px 14px rgba(0,0,0,.04)}
+    .update-banner[hidden]{display:none!important}
+    .update-banner strong{display:block;font-size:.92rem}
+    .update-banner small{display:block;color:var(--muted);margin-top:2px}
+    .update-now{border:0;background:var(--brand);color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:750;white-space:nowrap}
+    .quick-empty{grid-column:1/-1;padding:16px}
+    .quick-pin-on{border-color:var(--brand)!important;background:var(--soft)!important}
+    .suggest-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .suggest-box p{margin:0 0 10px;color:var(--muted)}
+    .suggest-btn{border:1px solid var(--brand);background:var(--soft);color:var(--text);border-radius:10px;padding:8px 11px;cursor:pointer;font-weight:700}
+    .closest-list{display:grid;gap:7px;margin-top:12px}
+    .closest-btn{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:11px;padding:10px 11px;text-align:left;cursor:pointer}
+    .closest-btn strong{display:block}
+    .closest-btn small{display:block;color:var(--muted);margin-top:2px}
+    .compare-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:120;width:min(680px,calc(100% - 24px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brand);box-shadow:0 12px 34px rgba(0,0,0,.22);border-radius:14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .compare-bar[hidden]{display:none!important}
+    .compare-bar strong{display:block;font-size:.88rem}
+    .compare-bar small{display:block;color:var(--muted);margin-top:2px}
+    .compare-bar button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:7px 9px;cursor:pointer}
+    .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .compare-card{border:1px solid var(--line);background:var(--bg);border-radius:13px;padding:12px}
+    .compare-card .part-code{margin-bottom:4px}
+    .compare-card h3{font-size:.95rem;margin:0 0 8px}
+    .compare-card ul{padding-left:18px;margin:8px 0}
+    .compare-card li{margin:4px 0}
+    .version-status{font-weight:650}
+    @media(max-width:620px){
+      .update-banner{margin-left:0;margin-right:0;align-items:flex-start}
+      .compare-grid{grid-template-columns:1fr}
+      .compare-bar{bottom:10px}
+    }
   </style>
 </head>
 <body>
@@ -248,7 +281,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <h1>Gent Vigilon Engineer Reference</h1>
-        <p>Offline quick-reference • Version 6.0</p>
+        <p>Offline quick-reference • Version 6.1</p>
       </div>
       <div class="top-actions">
         <button class="install-btn" id="installBtn" type="button" hidden>Install</button>
@@ -260,6 +293,11 @@
       </div>
     </div>
   </header>
+
+  <div class="update-banner" id="updateBanner" hidden>
+    <div><strong>New version available</strong><small>A newer copy of the app is ready to install.</small></div>
+    <button class="update-now" id="updateNowBtn" type="button">Update now</button>
+  </div>
 
   <section class="hero compact-hero">
     <h2>Find what you need</h2>
@@ -274,7 +312,7 @@
   </section>
 
   <div class="home-content" id="homeContent">
-    <div class="section-title"><h2>Quick tasks</h2><span>Common panel jobs</span></div>
+    <div class="section-title"><h2>Quick tasks</h2><span>Pinned for quick access</span></div>
     <section class="quick-grid" id="quickTasksGrid"></section>
 
     <div class="section-title"><h2>Fault finding</h2><span>Fault message or guided checks</span></div>
@@ -309,9 +347,10 @@
     <main class="results" id="results"></main>
   </section>
 
-  <div class="footer">Gent Vigilon Engineer Reference • Version 6.0 • Offline-capable PWA • Verify site-specific programming before making changes.</div>
+  <div class="footer">Gent Vigilon Engineer Reference • Version 6.1 • <span class="version-status" id="connectionStatus">Offline ready</span> • Verify site-specific programming before making changes.</div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="compare-bar" id="compareBar" hidden><div><strong id="compareBarTitle">Compare parts</strong><small id="compareBarText">Select another part to compare.</small></div><button id="cancelCompareBtn" type="button">Cancel</button></div>
 <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-head"><h2 id="modalTitle">Reference</h2><button class="modal-close" id="modalClose" type="button" aria-label="Close">×</button></div>
@@ -490,14 +529,22 @@ const parts = [{"id":"part-compactplus-24","type":"part","cat":"Parts Reference"
 
 const allItems = [...guidedFlows, ...faults, ...procedures, ...parts];
 
-const quickTasks = [
-  ['device-status','Device Status','Interrogate device'],
-  ['find-device','Find Device','Locate a device'],
-  ['disable-sector','Isolate Sector','Disable / enable sector'],
-  ['allocate-loop','Re-Allocate Loop','Run loop allocation'],
-  ['loop-repair','Loop Repair','Repair loop after fault'],
-  ['nvm-backup','NVM Backup','Back up cards 0–15']
+const defaultQuickTaskIds = [
+  'device-status',
+  'find-device',
+  'disable-sector',
+  'allocate-loop',
+  'loop-repair',
+  'nvm-backup'
 ];
+const defaultQuickDescriptions = {
+  'device-status':'Interrogate device',
+  'find-device':'Locate a device',
+  'disable-sector':'Disable / enable sector',
+  'allocate-loop':'Run loop allocation',
+  'loop-repair':'Repair loop after fault',
+  'nvm-backup':'Back up cards 0–15'
+};
 
 const quickCats = [
   ['Parts Reference','Search descriptions or part codes'],
@@ -565,6 +612,14 @@ let activeCategory = 'All';
 let query = '';
 const favs = new Set(JSON.parse(localStorage.getItem('gentVigilonFavs') || '[]'));
 let recentIds = JSON.parse(localStorage.getItem('gentVigilonRecent') || '[]').filter(id=>allItems.some(x=>x.id===id)).slice(0,8);
+let quickTaskIds = (()=>{
+  try{
+    const saved = JSON.parse(localStorage.getItem('gentVigilonQuickPinsV1') || 'null');
+    const ids = Array.isArray(saved) ? saved : defaultQuickTaskIds;
+    return ids.filter(id=>allItems.some(x=>x.id===id)).slice(0,10);
+  }catch{return [...defaultQuickTaskIds];}
+})();
+let compareSelection = [];
 let personalNotes = (()=>{
   try{
     const data = JSON.parse(localStorage.getItem('gentVigilonNotesV1') || '[]');
@@ -596,7 +651,15 @@ const toastEl = $('#toast');
 const modalBackdrop = $('#modalBackdrop');
 const modalTitle = $('#modalTitle');
 const modalBody = $('#modalBody');
+const updateBanner = $('#updateBanner');
+const updateNowBtn = $('#updateNowBtn');
+const compareBar = $('#compareBar');
+const compareBarTitle = $('#compareBarTitle');
+const compareBarText = $('#compareBarText');
+const connectionStatus = $('#connectionStatus');
 let deferredInstallPrompt = null;
+let waitingServiceWorker = null;
+let serviceWorkerRefreshing = false;
 
 function escapeHtml(s=''){
   return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -661,6 +724,92 @@ function matchesSearch(p, rawQuery){
   });
 }
 
+
+function levenshtein(a='',b=''){
+  a=String(a); b=String(b);
+  if(a===b) return 0;
+  if(!a.length) return b.length;
+  if(!b.length) return a.length;
+  const prev=Array.from({length:b.length+1},(_,i)=>i);
+  const cur=new Array(b.length+1);
+  for(let i=1;i<=a.length;i++){
+    cur[0]=i;
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    for(let j=0;j<=b.length;j++) prev[j]=cur[j];
+  }
+  return prev[b.length];
+}
+let searchVocabularyCache=null;
+function searchVocabulary(){
+  if(searchVocabularyCache) return searchVocabularyCache;
+  const set=new Set();
+  allItems.forEach(p=>{
+    const raw=[p.title,p.code||'',p.name||'',p.partGroup||'',(p.tags||[]).join(' '),(p.aliases||[]).join(' ')].join(' ');
+    normaliseSearchText(raw).split(' ').forEach(w=>{if(w.length>=3)set.add(w);});
+    if(p.code) set.add(normaliseSearchText(p.code).replace(/\s+/g,''));
+  });
+  SEARCH_SYNONYM_GROUPS.flat().forEach(x=>normaliseSearchText(x).split(' ').forEach(w=>{if(w.length>=3)set.add(w);}));
+  searchVocabularyCache=[...set];
+  return searchVocabularyCache;
+}
+function nearestVocabularyWord(word){
+  const w=normaliseSearchText(word);
+  if(w.length<4) return w;
+  let best=w, bestDist=99;
+  for(const cand of searchVocabulary()){
+    if(Math.abs(cand.length-w.length)>3) continue;
+    const d=levenshtein(w,cand);
+    if(d<bestDist){bestDist=d;best=cand;if(d===1) break;}
+  }
+  const threshold=Math.min(3,Math.max(1,Math.floor(w.length*0.34)));
+  return bestDist<=threshold ? best : w;
+}
+function didYouMeanQuery(raw){
+  const terms=normaliseSearchText(raw).split(' ').filter(Boolean);
+  if(!terms.length) return '';
+  let changed=false;
+  const corrected=terms.map(t=>{
+    const c=nearestVocabularyWord(t);
+    if(c!==t) changed=true;
+    return c;
+  });
+  return changed ? corrected.join(' ') : '';
+}
+function fuzzyItemScore(p,raw){
+  const q=normaliseSearchText(raw);
+  if(!q) return 1;
+  const qCompact=q.replace(/\s+/g,'');
+  if(p.type==='part' && p.code){
+    const codeCompact=normaliseSearchText(p.code).replace(/\s+/g,'');
+    const d=levenshtein(qCompact,codeCompact)/Math.max(qCompact.length,codeCompact.length,1);
+    if(d<=0.35) return d*0.55;
+  }
+  const words=normaliseSearchText([p.title,p.code||'',p.name||'',(p.tags||[]).join(' '),(p.aliases||[]).join(' ')].join(' ')).split(' ').filter(Boolean);
+  const qWords=q.split(' ').filter(Boolean);
+  if(!words.length||!qWords.length) return 1;
+  let sum=0;
+  for(const qw of qWords){
+    let best=1;
+    for(const w of words){
+      if(w.includes(qw)||qw.includes(w)){best=0;break;}
+      if(Math.abs(w.length-qw.length)>4) continue;
+      best=Math.min(best,levenshtein(qw,w)/Math.max(qw.length,w.length,1));
+    }
+    sum+=best;
+  }
+  return sum/qWords.length;
+}
+function closestMatches(raw,limit=5){
+  const candidates=allItems.filter(p=>itemMatchesActiveView(p));
+  return candidates.map(p=>({p,score:fuzzyItemScore(p,raw)}))
+    .filter(x=>x.score<=0.48)
+    .sort((a,b)=>a.score-b.score || a.p.title.localeCompare(b.p.title))
+    .slice(0,limit)
+    .map(x=>x.p);
+}
+
 function highlight(s){
   const safe = escapeHtml(s);
   const q = query.trim();
@@ -672,27 +821,21 @@ function highlight(s){
 
 function itemText(p){
   if(p.type==='part'){
-    let out=`${p.code} — ${p.name}\nSource: Gent Consultants Specification Guide, page ${p.page}\n${p.description}`;
-    if(p.features?.length) out += '\n' + p.features.map(x=>'• '+x).join('\n');
-    if(p.compatible?.length) out += '\nRelated / compatible: ' + p.compatible.join(', ');
-    if(p.partNote) out += '\nNote: ' + p.partNote;
-    return out;
+    return `${p.code} — ${p.name}`;
   }
   if(p.type==='flow'){
-    const lines = [`${p.title}`, `Source: Gent Vigilon Help Sheet, page ${p.page}`];
+    const lines = [`${p.title}`];
     Object.values(p.nodes||{}).forEach(n=>lines.push(n.text));
     return lines.join('\n');
   }
   if(p.type==='fault'){
-    let out = `${p.title}\nSource: Gent Generic Commissioning Instructions, Appendix B, page ${p.page}\nAssociated with: ${p.associated}\nMeaning: ${p.meaning}\nInitial action: ${p.action}`;
-    if(p.clearType) out += `\nFault class: ${p.clearType}`;
-    return out;
+    return `${p.title}\n\nMeaning: ${p.meaning}\nInitial action: ${p.action}`;
   }
-  let out = `${p.title}\nSource: Gent Vigilon Help Sheet, page ${p.page}\n`;
-  if(p.path) out += p.path.join(' → ') + '\n';
-  if(p.list) out += p.list.map((x,i)=>`${i+1}. ${x}`).join('\n') + '\n';
-  if(p.note) out += p.note;
-  return out.trim();
+  const lines = [p.title, ''];
+  if(p.path) lines.push(p.path.join(' → '));
+  if(p.list) lines.push(...p.list.map((x,i)=>`${i+1}. ${x}`));
+  if(p.note) lines.push('', p.note);
+  return lines.join('\n').trim();
 }
 
 function itemSourceShort(p){
@@ -809,7 +952,7 @@ function openNotesModal(){
   showModal('My Notes', `<div class="notes-warning"><strong>MY NOTES – NOT FROM GENT DOCUMENTATION.</strong><br>Notes are saved only on this device. They are not uploaded to GitHub.</div><div class="modal-actions"><button class="primary" type="button" data-new-note>Add general note</button><button type="button" data-export-notes>Export backup</button><button type="button" data-import-notes>Import backup</button></div>${list}<input id="notesImportFile" type="file" accept="application/json,.json" hidden>`);
 }
 function exportNotes(){
-  const payload={app:'Gent Vigilon Engineer Reference',version:'6.0',exportedAt:new Date().toISOString(),notes:personalNotes};
+  const payload={app:'Gent Vigilon Engineer Reference',version:'6.1',exportedAt:new Date().toISOString(),notes:personalNotes};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='gent-vigilon-notes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -831,8 +974,65 @@ function importNotesFile(file){
   reader.readAsText(file);
 }
 
+
+function saveQuickTasks(){
+  localStorage.setItem('gentVigilonQuickPinsV1', JSON.stringify(quickTaskIds));
+}
+function refreshQuickPinButtons(id){
+  const pinned=quickTaskIds.includes(id);
+  document.querySelectorAll(`[data-quick-pin="${id}"]`).forEach(btn=>{
+    btn.textContent=pinned?'Remove from Quick Tasks':'Pin to Quick Tasks';
+    btn.classList.toggle('quick-pin-on',pinned);
+  });
+}
+function toggleQuickTask(id){
+  if(quickTaskIds.includes(id)){
+    quickTaskIds=quickTaskIds.filter(x=>x!==id);
+    saveQuickTasks(); renderHomePanels(); refreshQuickPinButtons(id); showToast('Removed from Quick Tasks');
+    return;
+  }
+  if(quickTaskIds.length>=10){showToast('Quick Tasks is limited to 10 items');return;}
+  quickTaskIds.push(id);
+  saveQuickTasks(); renderHomePanels(); refreshQuickPinButtons(id); showToast('Pinned to Quick Tasks');
+}
+function quickTaskDescription(p){
+  return defaultQuickDescriptions[p.id] || itemSourceShort(p);
+}
+function updateCompareBar(){
+  if(!compareSelection.length){compareBar.hidden=true;return;}
+  const first=parts.find(p=>p.id===compareSelection[0]);
+  compareBar.hidden=false;
+  compareBarTitle.textContent=first ? `Compare: ${first.code}` : 'Compare parts';
+  compareBarText.textContent='Select another part to compare.';
+}
+function clearCompareSelection(){
+  compareSelection=[]; updateCompareBar();
+}
+function comparePartCard(p){
+  const featureHtml=p.features?.length?`<div class="label">Key features</div><ul>${p.features.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
+  const compatible=p.compatible?.length?`<div class="part-meta"><span class="part-pill">Related / compatible: ${p.compatible.map(escapeHtml).join(', ')}</span></div>`:'';
+  return `<div class="compare-card"><div class="part-code">${escapeHtml(p.code)}</div><h3>${escapeHtml(p.name)}</h3><div>${escapeHtml(p.description||'')}</div>${featureHtml}${compatible}<div class="source-line">Source guide p.${p.page}</div></div>`;
+}
+function openPartComparison(a,b){
+  showModal('Compare parts', `<div class="compare-grid">${comparePartCard(a)}${comparePartCard(b)}</div><div class="modal-actions"><button type="button" data-modal-close>Close</button></div>`);
+}
+function choosePartForCompare(id){
+  const p=parts.find(x=>x.id===id); if(!p) return;
+  if(compareSelection.includes(id)){clearCompareSelection();showToast('Compare selection cleared');return;}
+  if(!compareSelection.length){
+    compareSelection=[id];updateCompareBar();showToast('Now select another part');
+    return;
+  }
+  const first=parts.find(x=>x.id===compareSelection[0]);
+  if(first && first.id!==p.id) openPartComparison(first,p);
+  clearCompareSelection();
+}
+
 function renderHomePanels(){
-  quickTasksGrid.innerHTML = quickTasks.map(([id,title,desc])=>`<button class="quick task" data-open-item="${id}" type="button"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(desc)}</small></button>`).join('');
+  const pinnedItems=quickTaskIds.map(id=>allItems.find(x=>x.id===id)).filter(Boolean);
+  quickTasksGrid.innerHTML = pinnedItems.length
+    ? pinnedItems.map(p=>`<button class="quick task" data-open-item="${p.id}" type="button"><strong>${escapeHtml(p.type==='part'?`${p.code} — ${p.name}`:p.title)}</strong><small>${escapeHtml(quickTaskDescription(p))}</small></button>`).join('')
+    : `<div class="empty quick-empty">No Quick Tasks pinned. Open any item and tap <strong>Pin to Quick Tasks</strong>.</div>`;
 
   const favItems = [...favs].map(id=>allItems.find(x=>x.id===id)).filter(Boolean).slice(0,6);
   homeFavPanel.hidden = !favItems.length;
@@ -848,6 +1048,14 @@ function renderHomePanels(){
 }
 
 document.addEventListener('click',e=>{
+  const suggestionBtn=e.target.closest('[data-search-suggestion]');
+  if(suggestionBtn){
+    focusedItemId='';
+    query=suggestionBtn.dataset.searchSuggestion||'';
+    searchEl.value=query;
+    showResultsView(); renderResults(); searchEl.focus();
+    return;
+  }
   const btn = e.target.closest('[data-open-item]');
   if(btn){ openItemById(btn.dataset.openItem); return; }
   const noteBtn=e.target.closest('[data-open-note]');
@@ -1025,7 +1233,8 @@ function renderCard(p){
   if(itemNotes.length){
     body += `<div class="related"><div class="label">My personal notes – not from Gent documentation</div>${itemNotes.map(n=>`<div class="personal-note"><div class="note-head"><div class="note-title">${escapeHtml(n.title||'My note')}</div><button class="action" type="button" data-edit-note="${escapeHtml(n.id)}">Edit</button></div><div class="note-text">${escapeHtml(n.text)}</div><div class="note-meta">Updated ${escapeHtml(formatNoteDate(n.updatedAt))}</div></div>`).join('')}</div>`;
   }
-  body += `<div class="card-actions"><button class="action" data-add-note-item="${p.id}" type="button">${itemNotes.length?`Add another note (${itemNotes.length})`:'Add note'}</button><button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy ${p.type==='part'?'part details':p.type==='fault'?'fault guidance':p.type==='flow'?'flow text':'procedure'}</button><button class="action print" type="button">Print</button></div>`;
+  const isQuickPinned=quickTaskIds.includes(p.id);
+  body += `<div class="card-actions"><button class="action" data-add-note-item="${p.id}" type="button">${itemNotes.length?`Add another note (${itemNotes.length})`:'Add note'}</button><button class="action ${isQuickPinned?'quick-pin-on':''}" data-quick-pin="${p.id}" type="button">${isQuickPinned?'Remove from Quick Tasks':'Pin to Quick Tasks'}</button>${p.type==='part'?`<button class="action" data-compare-part="${p.id}" type="button">Compare</button>`:''}<button class="action source-btn" data-source-id="${p.id}" type="button">Source</button><button class="action copy" data-id="${p.id}" type="button">Copy for engineer</button><button class="action print" type="button">Print</button></div>`;
   const compactMeta = p.type==='part' ? p.partGroup : p.type==='fault' ? 'Fault message' : p.type==='flow' ? 'Guided fault flow' : p.cat;
   const compactTitle = p.type==='part'
     ? `<span class="part-summary-code">${highlight(p.code)}</span> <span class="part-summary-name">${highlight(p.name)}</span>`
@@ -1097,11 +1306,13 @@ function bindResultActions(){
   }));
 
   resultsEl.querySelectorAll('[data-add-note-item]').forEach(btn=>btn.addEventListener('click',()=>openNoteEditor(btn.dataset.addNoteItem)));
+  resultsEl.querySelectorAll('[data-quick-pin]').forEach(btn=>btn.addEventListener('click',()=>toggleQuickTask(btn.dataset.quickPin)));
+  resultsEl.querySelectorAll('[data-compare-part]').forEach(btn=>btn.addEventListener('click',()=>choosePartForCompare(btn.dataset.comparePart)));
   resultsEl.querySelectorAll('.source-btn').forEach(btn=>btn.addEventListener('click',()=>openSourceModal(btn.dataset.sourceId)));
 
   resultsEl.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{
     const p = allItems.find(x=>x.id===btn.dataset.id);
-    try{await navigator.clipboard.writeText(itemText(p)); showToast(p.type==='fault'?'Fault guidance copied':p.type==='flow'?'Flow text copied':p.type==='part'?'Part details copied':'Procedure copied');}
+    try{await navigator.clipboard.writeText(itemText(p)); showToast('Copied for engineer');}
     catch{showToast('Copy is blocked in this browser');}
   }));
   resultsEl.querySelectorAll('.print').forEach(btn=>btn.addEventListener('click',()=>window.print()));
@@ -1132,7 +1343,16 @@ function renderResults(){
   countText.textContent = `${total} result${total===1?'':'s'}`;
 
   if(!total){
-    resultsEl.innerHTML = `<div class="empty"><strong>No match found.</strong><br>Try a shorter term or switch the filter to <strong>All</strong>.</div>`;
+    const suggestion=didYouMeanQuery(query);
+    const closest=closestMatches(query,5);
+    let extra='';
+    if(suggestion && normaliseSearchText(suggestion)!==normaliseSearchText(query)){
+      extra += `<p>Did you mean <button class="suggest-btn" type="button" data-search-suggestion="${escapeHtml(suggestion)}">${escapeHtml(suggestion)}</button>?</p>`;
+    }
+    if(closest.length){
+      extra += `<div class="label">Closest matches</div><div class="closest-list">${closest.map(p=>`<button class="closest-btn" type="button" data-open-item="${escapeHtml(p.id)}"><strong>${escapeHtml(p.type==='part'?`${p.code} — ${p.name}`:p.title)}</strong><small>${escapeHtml(itemSourceShort(p))}</small></button>`).join('')}</div>`;
+    }
+    resultsEl.innerHTML = `<div class="suggest-box"><strong>No exact match found.</strong><p>Try a shorter term${activeCategory!=='All'?' or switch the filter to All':''}.</p>${extra}</div>`;
     return;
   }
 
@@ -1229,6 +1449,15 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-open-notes-home]')){openNotesModal();return;}
 });
 
+$('#cancelCompareBtn').addEventListener('click',()=>{clearCompareSelection();showToast('Compare cancelled');});
+
+function updateConnectionStatus(){
+  if(connectionStatus) connectionStatus.textContent = navigator.onLine ? 'Online • offline ready' : 'Offline mode';
+}
+window.addEventListener('online',updateConnectionStatus);
+window.addEventListener('offline',updateConnectionStatus);
+updateConnectionStatus();
+
 const savedTheme = localStorage.getItem('gentVigilonTheme');
 if(savedTheme==='dark') document.documentElement.dataset.theme='dark';
 function updateThemeButton(){ $('#themeBtn').textContent = document.documentElement.dataset.theme==='dark' ? 'Light mode' : 'Dark mode'; }
@@ -1263,8 +1492,41 @@ $('#installBtn').addEventListener('click', async()=>{
 });
 window.addEventListener('appinstalled',()=>{ $('#installBtn').hidden=true; showToast('App installed'); });
 
+function showUpdateAvailable(worker){
+  waitingServiceWorker=worker||waitingServiceWorker;
+  if(updateBanner) updateBanner.hidden=false;
+}
+if(updateNowBtn){
+  updateNowBtn.addEventListener('click',()=>{
+    if(waitingServiceWorker){
+      waitingServiceWorker.postMessage({type:'SKIP_WAITING'});
+    }else{
+      location.reload();
+    }
+  });
+}
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(serviceWorkerRefreshing) return;
+    serviceWorkerRefreshing=true;
+    location.reload();
+  });
+  window.addEventListener('load',async()=>{
+    try{
+      const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+      if(reg.waiting && navigator.serviceWorker.controller) showUpdateAvailable(reg.waiting);
+      reg.addEventListener('updatefound',()=>{
+        const worker=reg.installing;
+        if(!worker) return;
+        worker.addEventListener('statechange',()=>{
+          if(worker.state==='installed' && navigator.serviceWorker.controller){
+            showUpdateAvailable(worker);
+          }
+        });
+      });
+      reg.update().catch(()=>{});
+    }catch{}
+  });
 }
 
 renderHomePanels(); renderQuick(); renderFilters(); renderResults(); updateThemeButton();
